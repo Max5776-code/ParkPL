@@ -729,6 +729,365 @@ button{
   to{opacity:1;transform:translateY(0)}
 }
 
+
+/* ===== ParkPL v0.12 — verrouillage horizontal + identité "carnet de route" ===== */
+
+/* Verrouillage structurel : la page ne peut plus glisser latéralement. */
+html{
+  width:100%;
+  max-width:100%;
+  overflow-x:hidden!important;
+  overscroll-behavior-x:none;
+}
+body{
+  width:100%;
+  max-width:100%;
+  overflow-x:hidden!important;
+  overscroll-behavior-x:none;
+  position:relative;
+}
+header,
+.stats-strip,
+.toolbar,
+.gps-panel,
+.map-stage,
+.content,
+.card,
+.form-group,
+.commerce-card,
+.commerce-editor,
+.parking-row{
+  width:100%;
+  max-width:100%;
+  min-width:0;
+}
+header *,
+.stats-strip *,
+.toolbar *,
+.gps-panel *,
+.map-stage *,
+.content *,
+.card *,
+.form-group *,
+.commerce-card *,
+.commerce-editor *,
+.parking-row *{
+  min-width:0;
+}
+img,svg,canvas,video{
+  max-width:100%;
+}
+.toolbar{
+  overflow:hidden;
+}
+.toolbar input,
+.toolbar select,
+.toolbar button{
+  max-width:100%;
+}
+.grid,
+.detail-grid,
+.commerce-grid{
+  width:100%;
+  max-width:100%;
+  min-width:0;
+}
+.field{
+  min-width:0;
+  max-width:100%;
+}
+input,select,textarea{
+  min-width:0!important;
+  max-width:100%!important;
+}
+.leaflet-container{
+  max-width:100%!important;
+}
+.leaflet-control-container,
+.leaflet-pane{
+  max-width:none;
+}
+/* Les galeries restent volontairement défilables horizontalement. */
+.photo-gallery{
+  max-width:100%;
+  overscroll-behavior-x:contain;
+}
+
+/* Nouvelle composition visuelle. */
+body::before{
+  content:"";
+  position:fixed;
+  inset:auto -80px 9% auto;
+  width:190px;
+  height:190px;
+  border-radius:50%;
+  background:rgba(255,125,82,.10);
+  pointer-events:none;
+  z-index:0;
+}
+
+header{
+  isolation:isolate;
+}
+header::before{
+  width:150px!important;
+  height:150px!important;
+  right:-38px!important;
+  top:-73px!important;
+  background:rgba(255,255,255,.13)!important;
+}
+header::after{
+  width:85px!important;
+  height:85px!important;
+  right:84px!important;
+  bottom:-50px!important;
+  background:rgba(255,200,69,.20)!important;
+}
+.brand-bubble{
+  position:relative;
+  border:3px solid rgba(255,255,255,.65)!important;
+}
+.brand-bubble::after{
+  content:"";
+  position:absolute;
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  right:-8px;
+  top:2px;
+  background:var(--sun);
+  box-shadow:0 0 0 3px rgba(255,255,255,.25);
+}
+
+.stats-strip{
+  position:relative;
+  z-index:2;
+}
+.stat-bubble{
+  position:relative;
+  overflow:hidden;
+}
+.stat-bubble::after{
+  content:"";
+  position:absolute;
+  width:38px;
+  height:38px;
+  border-radius:50%;
+  right:-18px;
+  bottom:-20px;
+  background:rgba(91,69,214,.08);
+}
+.stat-bubble:nth-child(2)::after{background:rgba(255,125,82,.12)}
+.stat-bubble:nth-child(3)::after{background:rgba(32,167,122,.12)}
+
+.map-stage{
+  position:relative;
+  z-index:2;
+  margin:0 12px 15px;
+  width:calc(100% - 24px)!important;
+  padding:11px;
+  border-radius:29px;
+  background:linear-gradient(145deg,#fff 0%,#f4efff 100%);
+  border:1px solid #e4dcf7;
+  box-shadow:0 16px 36px rgba(65,45,130,.16);
+  overflow:hidden;
+}
+.map-stage::before{
+  content:"";
+  position:absolute;
+  width:120px;
+  height:120px;
+  border-radius:50%;
+  left:-56px;
+  bottom:-66px;
+  background:rgba(255,200,69,.20);
+  pointer-events:none;
+}
+.map-stage-head{
+  position:relative;
+  z-index:2;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:3px 4px 10px;
+}
+.map-stage-head strong{
+  display:block;
+  margin-top:2px;
+  font-size:18px;
+  letter-spacing:-.25px;
+}
+.eyebrow{
+  display:block;
+  font-size:10px;
+  letter-spacing:.13em;
+  font-weight:900;
+  color:var(--accent2);
+}
+.map-mascot{
+  display:grid;
+  place-items:center;
+  flex:0 0 45px;
+  width:45px;
+  height:45px;
+  border-radius:16px;
+  background:#fff4ce;
+  font-size:24px;
+  transform:rotate(5deg);
+  box-shadow:0 7px 15px rgba(120,80,20,.12);
+}
+.map-stage #map{
+  width:100%!important;
+  max-width:100%!important;
+  margin:0!important;
+  border-radius:21px!important;
+  border:0!important;
+  box-shadow:inset 0 0 0 2px rgba(255,255,255,.8)!important;
+}
+.map-legend{
+  position:relative;
+  z-index:2;
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px 11px;
+  padding:10px 3px 1px;
+  font-size:10.5px;
+  font-weight:750;
+  color:var(--muted);
+}
+.map-legend span{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+}
+.dot{
+  width:9px;
+  height:9px;
+  border-radius:50%;
+  display:inline-block;
+  box-shadow:0 0 0 3px #fff;
+}
+.dot.good{background:#31bd88}
+.dot.average{background:#ffc845}
+.dot.avoid{background:#ef6275}
+.dot.unknown{background:#7968d8}
+
+.card{
+  position:relative;
+  overflow:hidden;
+}
+.card::after{
+  content:"";
+  position:absolute;
+  width:92px;
+  height:92px;
+  border-radius:50%;
+  right:-54px;
+  top:-54px;
+  background:rgba(91,69,214,.055);
+  pointer-events:none;
+}
+#selectedCard::before,
+#listSection::before,
+#formSection::before{
+  position:absolute;
+  right:17px;
+  top:15px;
+  display:grid;
+  place-items:center;
+  width:38px;
+  height:38px;
+  border-radius:14px;
+  font-size:20px;
+  z-index:1;
+}
+#selectedCard::before{
+  content:"📍";
+  background:#fff0eb;
+}
+#listSection::before{
+  content:"🅿️";
+  background:#fff7d7;
+}
+#formSection::before{
+  content:"✏️";
+  background:#e8fff5;
+}
+#selectedCard h2,
+#listSection h2,
+#formSection h2{
+  padding-right:48px;
+}
+
+.form-group{
+  position:relative;
+  overflow:hidden;
+}
+.form-group::after{
+  content:"";
+  position:absolute;
+  width:70px;
+  height:70px;
+  border-radius:50%;
+  right:-43px;
+  bottom:-45px;
+  background:rgba(32,167,122,.055);
+  pointer-events:none;
+}
+
+.chip{
+  box-shadow:0 3px 8px rgba(78,59,167,.08);
+}
+.chips .chip:nth-child(3n+2){
+  background:#fff0e9!important;
+  color:#b75130!important;
+  border-color:#ffd8ca!important;
+}
+.chips .chip:nth-child(3n){
+  background:#eafff6!important;
+  color:#187957!important;
+  border-color:#c8f2df!important;
+}
+
+.primary,
+.gps-create,
+.commerce-add,
+.address-lookup{
+  letter-spacing:.01em;
+}
+.primary::first-letter,
+.gps-create::first-letter{
+  font-size:1.08em;
+}
+
+.parking-row{
+  position:relative;
+  overflow:hidden;
+}
+.parking-row::after{
+  content:"";
+  position:absolute;
+  width:54px;
+  height:54px;
+  border-radius:50%;
+  right:-31px;
+  bottom:-32px;
+  background:rgba(255,200,69,.11);
+}
+
+@media(max-width:500px){
+  .toolbar{
+    grid-template-columns:minmax(0,1fr) auto!important;
+  }
+  .toolbar select{
+    grid-column:1/-1;
+  }
+  .map-stage{
+    border-radius:25px;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -737,7 +1096,7 @@ button{
     <div class="brand-bubble" aria-hidden="true">🚛</div>
     <div class="brand-copy">
       <h1>ParkPL</h1>
-      <p>Le carnet de route des parkings poids lourds <span class="version">v0.11.1</span></p>
+      <p>Le carnet de route des parkings poids lourds <span class="version">v0.12</span></p>
     </div>
   </div>
 </header>
@@ -764,7 +1123,22 @@ button{
   <div id="gpsStatus" class="gps-status" aria-live="polite"></div>
 </section>
 
-<div id="map"></div>
+<section class="map-stage" aria-label="Carte des parkings">
+  <div class="map-stage-head">
+    <div>
+      <span class="eyebrow">CARTE DE ROUTE</span>
+      <strong>Où poser le camion ?</strong>
+    </div>
+    <span class="map-mascot" aria-hidden="true">🛣️</span>
+  </div>
+  <div id="map"></div>
+  <div class="map-legend">
+    <span><i class="dot good"></i> Recommandé</span>
+    <span><i class="dot average"></i> Correct</span>
+    <span><i class="dot avoid"></i> À éviter</span>
+    <span><i class="dot unknown"></i> Non noté</span>
+  </div>
+</section>
 
 <main class="content">
   <section id="selectedCard" class="card hidden">
