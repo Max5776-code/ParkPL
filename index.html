@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#173a2b">
+  <meta name="theme-color" content="#5b45d6">
   <title>ParkPL</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
@@ -387,19 +387,122 @@
     .leaflet-control-container{position:absolute;inset:0;pointer-events:none}
     .content{position:relative;z-index:2;background:var(--bg)}
 
-    .leaflet-popup-content-wrapper{border-radius:14px}
+
+    .card h2{font-size:23px;letter-spacing:-.45px}
+    .card h3{font-size:18px}
+    .meta{color:var(--muted)}
+    .chip{
+      background:#f0edff;
+      color:#5141b0;
+      border:1px solid #e1dafc;
+      border-radius:999px;
+      padding:7px 10px;
+      font-weight:750;
+    }
+    .gps-panel{padding:0 12px 11px;background:transparent}
+    .gps-create{
+      border-radius:18px!important;
+      background:linear-gradient(135deg,#20a77a,#3fc493)!important;
+      box-shadow:0 9px 20px rgba(32,167,122,.22)!important;
+      letter-spacing:.1px;
+    }
+    #map{
+      margin:0 12px 14px;
+      border-radius:25px;
+      overflow:hidden;
+      border:3px solid #fff;
+      box-shadow:var(--shadow);
+    }
+    #selectedCard{
+      border-top:5px solid var(--accent2);
+      animation:cardIn .22s ease-out;
+    }
+    #listSection{border-top:5px solid var(--sun)}
+    #formSection{border-top:5px solid var(--accent3)}
+    @keyframes cardIn{
+      from{opacity:0;transform:translateY(8px)}
+      to{opacity:1;transform:translateY(0)}
+    }
+    .detail-box,.commerce-info{
+      background:#f8f6ff;
+      border:1px solid #ede8fa;
+      border-radius:15px;
+    }
+    .recommendation,.return-badge{border-radius:999px}
+    .commerce-card,.commerce-editor,.photo-box{
+      border-radius:19px;
+      box-shadow:0 5px 14px rgba(64,45,125,.06);
+    }
+    .parking-row{
+      border-radius:17px!important;
+      border:1px solid var(--border)!important;
+      background:#fff!important;
+      margin-bottom:9px!important;
+      box-shadow:0 5px 13px rgba(64,45,125,.06);
+      transition:transform .15s,box-shadow .15s;
+    }
+    .parking-row:active{transform:scale(.985)}
+    .form-group{
+      background:#fbfaff;
+      border:1px solid #eee9fa;
+      border-radius:20px;
+      padding:13px;
+      margin-bottom:13px;
+    }
+    .form-group h4{
+      color:#4e3ea8;
+      font-size:15px;
+      margin-top:0;
+    }
+    .truck-marker-wrap{
+      background:transparent;
+      border:0;
+    }
+    .truck-marker{
+      width:44px;
+      height:44px;
+      border-radius:17px 17px 17px 5px;
+      display:grid;
+      place-items:center;
+      border:3px solid #fff;
+      box-shadow:0 6px 16px rgba(44,30,91,.28);
+      font-size:21px;
+      transform:rotate(-4deg);
+    }
+    .truck-marker span{transform:rotate(4deg)}
+    .truck-marker.good{background:#31bd88}
+    .truck-marker.average{background:#ffc845}
+    .truck-marker.avoid{background:#ef6275}
+    .truck-marker.unknown{background:#7968d8}
+    .leaflet-control-zoom a{
+      color:var(--accent)!important;
+      border-radius:12px!important;
+    }
+
+    .leaflet-popup-content-wrapper{border-radius:18px}
     @media(max-width:500px){.toolbar{grid-template-columns:1fr auto}.toolbar select{grid-column:1/-1}.grid,.detail-grid{grid-template-columns:1fr 1fr}.detail-box{padding:9px}.detail-value{font-size:13px}}
   </style>
 </head>
 <body>
 <header>
-  <h1>ParkPL</h1>
-  <p>Le carnet de route des parkings poids lourds <span class="version">v0.10</span></p>
+  <div class="brand-row">
+    <div class="brand-bubble" aria-hidden="true">🚛</div>
+    <div class="brand-copy">
+      <h1>ParkPL</h1>
+      <p>Le carnet de route des parkings poids lourds <span class="version">v0.11</span></p>
+    </div>
+  </div>
 </header>
+
+<section class="stats-strip" aria-label="Résumé de ParkPL">
+  <div class="stat-bubble"><span id="statParkings" class="stat-number">0</span><span class="stat-label">parkings</span></div>
+  <div class="stat-bubble"><span id="statPhotos" class="stat-number">0</span><span class="stat-label">photos</span></div>
+  <div class="stat-bubble"><span id="statCommerces" class="stat-number">0</span><span class="stat-label">commerces</span></div>
+</section>
 
 <section class="toolbar">
   <input id="search" placeholder="Ville, adresse, commerce…">
-  <button id="locateBtn" class="secondary" type="button">Ma position</button>
+  <button id="locateBtn" class="secondary" type="button">◎ Ma position</button>
   <select id="filter">
     <option value="all">Tous les parkings</option>
     <option value="night">Nuit autorisée</option>
@@ -436,8 +539,8 @@
     </div>
     <p id="cardComment">Parking public de 11 places. Nuit autorisée. E.Leclerc, Grand Frais et autres commerces à proximité.</p>
     <div class="actions">
-      <button id="navigateBtn" class="primary" type="button">Itinéraire</button>
-      <button id="editBtn" class="secondary" type="button">Modifier</button>
+      <button id="navigateBtn" class="primary" type="button">➜ Itinéraire</button>
+      <button id="editBtn" class="secondary" type="button">✎ Modifier</button>
     </div>
   </section>
 
@@ -677,13 +780,33 @@ function filteredParkings(){
     return matchQ && matchF;
   });
 }
+function updateStats(){
+  const parkingCount=parkings.length;
+  const photoCount=parkings.reduce((sum,p)=>sum+(Array.isArray(p.photos)?p.photos.length:0),0);
+  const commerceCount=parkings.reduce((sum,p)=>sum+(Array.isArray(p.commerces)?p.commerces.length:0),0);
+  document.getElementById("statParkings").textContent=parkingCount;
+  document.getElementById("statPhotos").textContent=photoCount;
+  document.getElementById("statCommerces").textContent=commerceCount;
+}
+
+function parkingIcon(p){
+  const state=["good","average","avoid"].includes(p.recommendation) ? p.recommendation : "unknown";
+  return L.divIcon({
+    className:"truck-marker-wrap",
+    html:`<div class="truck-marker ${state}"><span>🚛</span></div>`,
+    iconSize:[44,44],
+    iconAnchor:[22,39],
+    popupAnchor:[0,-38]
+  });
+}
+
 function render(){
   markers.forEach(m=>map.removeLayer(m)); markers.clear();
   const list=document.getElementById("parkingList"); list.innerHTML="";
   const visible=filteredParkings();
 
   visible.forEach(p=>{
-    const marker=L.marker([p.lat,p.lng]).addTo(map);
+    const marker=L.marker([p.lat,p.lng],{icon:parkingIcon(p)}).addTo(map);
     marker.bindPopup(`<strong>${escapeHtml(p.name)}</strong><br>${escapeHtml(p.address||"")}<br>${p.places||0} places PL`);
     marker.on("click",()=>selectParking(p.id));
     markers.set(p.id,marker);
@@ -1347,7 +1470,15 @@ function createParkingAtCurrentPosition(){
       if(window.tempGpsMarker){
         map.removeLayer(window.tempGpsMarker);
       }
-      window.tempGpsMarker=L.marker([latitude,longitude]).addTo(map)
+      window.tempGpsMarker=L.marker([latitude,longitude],{
+        icon:L.divIcon({
+          className:"truck-marker-wrap",
+          html:'<div class="truck-marker unknown"><span>📍</span></div>',
+          iconSize:[44,44],
+          iconAnchor:[22,39],
+          popupAnchor:[0,-38]
+        })
+      }).addTo(map)
         .bindPopup("Position GPS actuelle")
         .openPopup();
 

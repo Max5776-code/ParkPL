@@ -1,4 +1,4 @@
-const CACHE = "parkpl-v0.10";
+const CACHE = "parkpl-v0.11";
 const APP_SHELL = [
   "./",
   "./index.html",
