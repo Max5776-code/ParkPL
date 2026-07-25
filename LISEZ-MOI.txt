@@ -1,8 +1,12 @@
-PARKPL v0.3
+PARKPL v0.4 — CORRECTION IPHONE
 
-Correction principale : affichage de la carte sur iPhone.
-- feuille de style Leaflet corrigée ;
-- recalcul automatique de la taille de la carte ;
-- cache mis à jour.
+À remplacer sur GitHub :
+- index.html
+- service-worker.js
 
-Sur GitHub, remplacez au minimum index.html et service-worker.js.
+Après publication :
+1. attendre 1 à 2 minutes ;
+2. supprimer l’ancienne icône ParkPL de l’écran d’accueil ;
+3. fermer Safari complètement ;
+4. rouvrir https://max5776-code.github.io/ParkPL/ ;
+5. ajouter de nouveau ParkPL à l’écran d’accueil.

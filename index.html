@@ -25,7 +25,7 @@
     .primary{background:var(--accent);color:#fff}
     .secondary{background:#e7eee9;color:var(--accent)}
     .danger{background:#f6e6e6;color:var(--danger)}
-    #map{height:46vh;min-height:330px;position:relative;z-index:1;overflow:hidden}
+    
     .content{padding:12px 12px calc(90px + env(safe-area-inset-bottom))}
     .card{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:14px;margin-bottom:12px}
     .card h2,.card h3{margin:0 0 8px}
@@ -40,6 +40,82 @@
     .empty{text-align:center;color:var(--muted);padding:20px}
     .status{font-size:13px;color:var(--muted);margin-top:8px}
     .bottom{position:fixed;z-index:1100;left:0;right:0;bottom:0;background:rgba(255,255,255,.97);border-top:1px solid var(--border);padding:9px 12px calc(9px + env(safe-area-inset-bottom));display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+    /* Correctif ParkPL 0.4 pour iPhone */
+    #map{
+      width:100%;
+      height:42vh;
+      min-height:360px;
+      max-height:520px;
+      position:relative;
+      z-index:1;
+      overflow:hidden;
+      isolation:isolate;
+      background:#dfe7e2;
+    }
+    .leaflet-container{
+      position:relative;
+      overflow:hidden;
+      outline:0;
+      -webkit-tap-highlight-color:transparent;
+      width:100%;
+      height:100%;
+    }
+    .leaflet-pane,
+    .leaflet-tile,
+    .leaflet-marker-icon,
+    .leaflet-marker-shadow,
+    .leaflet-tile-container,
+    .leaflet-pane > svg,
+    .leaflet-pane > canvas{
+      position:absolute;
+      left:0;
+      top:0;
+    }
+    .leaflet-map-pane,
+    .leaflet-tile-pane,
+    .leaflet-overlay-pane,
+    .leaflet-shadow-pane,
+    .leaflet-marker-pane,
+    .leaflet-tooltip-pane,
+    .leaflet-popup-pane{
+      position:absolute;
+      left:0;
+      top:0;
+      width:100%;
+      height:100%;
+    }
+    .leaflet-tile{
+      width:256px!important;
+      height:256px!important;
+      max-width:none!important;
+      max-height:none!important;
+      margin:0!important;
+      padding:0!important;
+      border:0!important;
+      object-fit:none!important;
+    }
+    .leaflet-container img{
+      max-width:none!important;
+      max-height:none!important;
+    }
+    .leaflet-control{
+      position:relative;
+      z-index:800;
+      pointer-events:auto;
+    }
+    .leaflet-top,.leaflet-bottom{
+      position:absolute;
+      z-index:800;
+      pointer-events:none;
+    }
+    .leaflet-top{top:0}
+    .leaflet-right{right:0}
+    .leaflet-bottom{bottom:0}
+    .leaflet-left{left:0}
+    .leaflet-control-container{position:absolute;inset:0;pointer-events:none}
+    .content{position:relative;z-index:2;background:var(--bg)}
+
     .leaflet-popup-content-wrapper{border-radius:14px}
     @media(max-width:500px){.toolbar{grid-template-columns:1fr auto}.toolbar select{grid-column:1/-1}.grid{grid-template-columns:1fr}}
   </style>
@@ -118,8 +194,7 @@
   <button id="showListBtn" class="secondary" type="button">Voir la liste</button>
 </nav>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 const defaultParking = {
   id: "fameck-001",
@@ -260,10 +335,25 @@ document.getElementById("locateBtn").addEventListener("click",()=>{
   },()=>alert("Autorisez la localisation dans Safari pour utiliser cette fonction."),{enableHighAccuracy:true});
 });
 
-if("serviceWorker" in navigator){navigator.serviceWorker.register("service-worker.js").catch(()=>{});}
+if("serviceWorker" in navigator){
+  navigator.serviceWorker.register("./service-worker.js").catch(()=>{});
+}
 render();
-setTimeout(()=>map.invalidateSize(),250);
-window.addEventListener("resize",()=>setTimeout(()=>map.invalidateSize(),150));
+
+function refreshMapLayout(){
+  requestAnimationFrame(()=>{
+    map.invalidateSize({pan:false,animate:false});
+    const p=parkings.find(x=>x.id===selectedId);
+    if(p) map.setView([p.lat,p.lng],map.getZoom(),{animate:false});
+  });
+}
+[100,350,800,1500].forEach(delay=>setTimeout(refreshMapLayout,delay));
+window.addEventListener("resize",()=>setTimeout(refreshMapLayout,120));
+window.addEventListener("orientationchange",()=>setTimeout(refreshMapLayout,450));
+document.addEventListener("visibilitychange",()=>{
+  if(document.visibilityState==="visible") setTimeout(refreshMapLayout,200);
+});
+window.addEventListener("pageshow",()=>setTimeout(refreshMapLayout,200));
 </script>
 </body>
 </html>
