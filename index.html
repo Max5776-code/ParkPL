@@ -39,6 +39,20 @@
     .hidden{display:none!important}
     .empty{text-align:center;color:var(--muted);padding:20px}
     .status{font-size:13px;color:var(--muted);margin-top:8px}
+    .version{display:inline-block;margin-left:5px;padding:2px 6px;border-radius:999px;background:rgba(255,255,255,.15);font-size:11px}
+    .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
+    .detail-box{border:1px solid var(--border);border-radius:12px;padding:10px;background:#fafcfb}
+    .detail-label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:3px}
+    .detail-value{font-size:14px;font-weight:650}
+    .section-title{font-size:14px;margin:16px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+    .recommendation{margin:12px 0 0;padding:11px 12px;border-radius:12px;font-weight:700}
+    .recommendation.good{background:#e5f3ea;color:#185b36}
+    .recommendation.average{background:#fff3d8;color:#765400}
+    .recommendation.avoid{background:#f8e2e2;color:#8a2222}
+    .recommendation.unknown{background:#edf0ee;color:#56615b}
+    .form-group{border:1px solid var(--border);border-radius:14px;padding:12px;margin:12px 0;background:#fafcfb}
+    .form-group h4{margin:0 0 11px;font-size:15px}
+    .full{grid-column:1/-1}
     .bottom{position:fixed;z-index:1100;left:0;right:0;bottom:0;background:rgba(255,255,255,.97);border-top:1px solid var(--border);padding:9px 12px calc(9px + env(safe-area-inset-bottom));display:grid;grid-template-columns:1fr 1fr;gap:8px}
 
     /* Correctif ParkPL 0.4 pour iPhone */
@@ -117,13 +131,13 @@
     .content{position:relative;z-index:2;background:var(--bg)}
 
     .leaflet-popup-content-wrapper{border-radius:14px}
-    @media(max-width:500px){.toolbar{grid-template-columns:1fr auto}.toolbar select{grid-column:1/-1}.grid{grid-template-columns:1fr}}
+    @media(max-width:500px){.toolbar{grid-template-columns:1fr auto}.toolbar select{grid-column:1/-1}.grid,.detail-grid{grid-template-columns:1fr 1fr}.detail-box{padding:9px}.detail-value{font-size:13px}}
   </style>
 </head>
 <body>
 <header>
   <h1>ParkPL</h1>
-  <p>Le carnet de route des parkings poids lourds</p>
+  <p>Le carnet de route des parkings poids lourds <span class="version">v0.5</span></p>
 </header>
 
 <section class="toolbar">
@@ -145,6 +159,8 @@
     <h2 id="cardTitle">Zone commerciale de Fameck</h2>
     <div id="cardAddress" class="meta">Rue Girolamo Cardano, 57290 Fameck</div>
     <div class="chips" id="cardChips"></div>
+    <div id="cardRecommendation" class="recommendation unknown">Appréciation non renseignée</div>
+    <div id="cardDetails" class="detail-grid"></div>
     <p id="cardComment">Parking public de 11 places. Nuit autorisée. E.Leclerc, Grand Frais et autres commerces à proximité.</p>
     <div class="actions">
       <button id="navigateBtn" class="primary" type="button">Itinéraire</button>
@@ -159,27 +175,74 @@
 
   <section id="formSection" class="card hidden">
     <h3 id="formTitle">Ajouter un parking</h3>
-    <div class="grid">
-      <div class="field"><label for="name">Nom</label><input id="name"></div>
-      <div class="field"><label for="address">Adresse</label><input id="address"></div>
-      <div class="field"><label for="lat">Latitude</label><input id="lat" inputmode="decimal"></div>
-      <div class="field"><label for="lng">Longitude</label><input id="lng" inputmode="decimal"></div>
-      <div class="field"><label for="places">Places PL</label><input id="places" type="number" min="0"></div>
-      <div class="field"><label for="maneuver">Difficulté de manœuvre</label>
-        <select id="maneuver">
-          <option value="">À renseigner</option>
-          <option>Très facile</option><option>Facile</option><option>Moyenne</option><option>Difficile</option><option>Très difficile</option>
-        </select>
-      </div>
-      <div class="field"><label for="night">Nuit autorisée</label>
-        <select id="night"><option value="yes">Oui</option><option value="no">Non</option><option value="unknown">À vérifier</option></select>
-      </div>
-      <div class="field"><label for="type">Type</label>
-        <select id="type"><option>Public</option><option>Privé</option><option>Aire autoroutière</option><option>Restaurant routier</option><option>Chez un client</option></select>
+    <div class="form-group">
+      <h4>Identification</h4>
+      <div class="grid">
+        <div class="field"><label for="name">Nom</label><input id="name"></div>
+        <div class="field"><label for="address">Adresse</label><input id="address"></div>
+        <div class="field"><label for="lat">Latitude</label><input id="lat" inputmode="decimal"></div>
+        <div class="field"><label for="lng">Longitude</label><input id="lng" inputmode="decimal"></div>
+        <div class="field"><label for="places">Places PL</label><input id="places" type="number" min="0"></div>
+        <div class="field"><label for="type">Type</label>
+          <select id="type"><option>Public</option><option>Privé</option><option>Aire autoroutière</option><option>Restaurant routier</option><option>Chez un client</option><option>Parking sauvage toléré</option></select>
+        </div>
       </div>
     </div>
-    <div class="field"><label for="shops">Commerces et services</label><input id="shops" placeholder="E.Leclerc, Grand Frais, toilettes…"></div>
-    <div class="field"><label for="comment">Commentaire chauffeur</label><textarea id="comment" rows="4"></textarea></div>
+
+    <div class="form-group">
+      <h4>Accès et stationnement</h4>
+      <div class="grid">
+        <div class="field"><label for="maneuver">Difficulté de manœuvre</label>
+          <select id="maneuver"><option value="">À renseigner</option><option>Très facile</option><option>Facile</option><option>Moyenne</option><option>Difficile</option><option>Très difficile</option></select>
+        </div>
+        <div class="field"><label for="access">Accès avec semi-remorque</label>
+          <select id="access"><option value="">À renseigner</option><option>Très facile</option><option>Facile</option><option>Correct</option><option>Difficile</option><option>Déconseillé</option></select>
+        </div>
+        <div class="field"><label for="surface">Revêtement</label>
+          <select id="surface"><option value="">À renseigner</option><option>Asphalte</option><option>Béton</option><option>Gravier</option><option>Terre</option><option>Mixte</option></select>
+        </div>
+        <div class="field"><label for="slope">Terrain</label>
+          <select id="slope"><option value="">À renseigner</option><option>Plat</option><option>Légèrement incliné</option><option>Très incliné</option></select>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <h4>Nuit et environnement</h4>
+      <div class="grid">
+        <div class="field"><label for="night">Nuit autorisée</label>
+          <select id="night"><option value="yes">Oui</option><option value="no">Non</option><option value="unknown">À vérifier</option></select>
+        </div>
+        <div class="field"><label for="lighting">Éclairage</label>
+          <select id="lighting"><option value="">À renseigner</option><option>Très bon</option><option>Correct</option><option>Faible</option><option>Aucun</option></select>
+        </div>
+        <div class="field"><label for="noise">Bruit la nuit</label>
+          <select id="noise"><option value="">À renseigner</option><option>Très calme</option><option>Calme</option><option>Modéré</option><option>Bruyant</option><option>Très bruyant</option></select>
+        </div>
+        <div class="field"><label for="security">Sentiment de sécurité</label>
+          <select id="security"><option value="">À renseigner</option><option>Très bon</option><option>Bon</option><option>Moyen</option><option>Faible</option><option>À éviter</option></select>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <h4>Services disponibles</h4>
+      <div class="grid">
+        <div class="field"><label for="toilets">Toilettes</label><select id="toilets"><option value="">À renseigner</option><option>Oui</option><option>Non</option><option>Aux heures d’ouverture</option></select></div>
+        <div class="field"><label for="shower">Douche</label><select id="shower"><option value="">À renseigner</option><option>Oui</option><option>Non</option><option>À proximité</option></select></div>
+        <div class="field"><label for="food">Restauration</label><select id="food"><option value="">À renseigner</option><option>Sur place</option><option>À proximité</option><option>Distributeur seulement</option><option>Aucune</option></select></div>
+        <div class="field"><label for="fuel">Carburant</label><select id="fuel"><option value="">À renseigner</option><option>Sur place</option><option>À proximité</option><option>Aucun</option></select></div>
+        <div class="field full"><label for="shops">Commerces et autres services</label><input id="shops" placeholder="E.Leclerc, Grand Frais, laverie, pharmacie…"></div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <h4>Avis du chauffeur</h4>
+      <div class="field"><label for="recommendation">Appréciation générale</label>
+        <select id="recommendation"><option value="">À renseigner</option><option value="good">Recommandé</option><option value="average">Acceptable / dépannage</option><option value="avoid">À éviter</option></select>
+      </div>
+      <div class="field"><label for="comment">Commentaire chauffeur</label><textarea id="comment" rows="5" placeholder="Accès, tranquillité, horaires, restrictions ou conseils utiles…"></textarea></div>
+    </div>
     <div class="actions">
       <button id="saveBtn" class="primary" type="button">Enregistrer</button>
       <button id="cancelBtn" class="secondary" type="button">Annuler</button>
@@ -206,11 +269,27 @@ const defaultParking = {
   night: "yes",
   type: "Public",
   maneuver: "",
+  access: "",
+  surface: "Asphalte",
+  slope: "Plat",
+  lighting: "",
+  noise: "",
+  security: "",
+  toilets: "Aux heures d’ouverture",
+  shower: "Non",
+  food: "À proximité",
+  fuel: "À proximité",
+  recommendation: "good",
   shops: "E.Leclerc, Grand Frais, autres commerces",
   comment: "Parking public de 11 places. Nuit autorisée. Coordonnées GPS à confirmer sur place."
 };
 
 let parkings = JSON.parse(localStorage.getItem("parkpl_data") || "null") || [defaultParking];
+parkings = parkings.map(p => ({
+  access:"", surface:"", slope:"", lighting:"", noise:"", security:"",
+  toilets:"", shower:"", food:"", fuel:"", recommendation:"",
+  ...p
+}));
 let selectedId = parkings[0]?.id || null;
 let editingId = null;
 let markers = new Map();
@@ -227,6 +306,8 @@ function chipsFor(p){
   const chips=[`${p.places || 0} places`, nightLabel(p.night), p.type || "Type inconnu"];
   if(p.maneuver) chips.push(`Manœuvre : ${p.maneuver}`);
   if(p.shops) chips.push("Commerces proches");
+  if(p.toilets==="Oui" || p.toilets==="Aux heures d’ouverture") chips.push("Toilettes");
+  if(p.shower==="Oui" || p.shower==="À proximité") chips.push("Douche");
   return chips;
 }
 function filteredParkings(){
@@ -270,13 +351,42 @@ function showCard(){
   document.getElementById("cardTitle").textContent=p.name;
   document.getElementById("cardAddress").textContent=p.address || "Adresse non renseignée";
   document.getElementById("cardComment").textContent=p.comment || "Aucun commentaire.";
+
   const wrap=document.getElementById("cardChips"); wrap.innerHTML="";
   chipsFor(p).forEach(t=>{const s=document.createElement("span");s.className="chip";s.textContent=t;wrap.appendChild(s);});
+
+  const recommendation=document.getElementById("cardRecommendation");
+  const recLabels={good:"Recommandé",average:"Acceptable / dépannage",avoid:"À éviter"};
+  recommendation.className=`recommendation ${p.recommendation || "unknown"}`;
+  recommendation.textContent=recLabels[p.recommendation] || "Appréciation non renseignée";
+
+  const details=[
+    ["Accès semi-remorque",p.access],
+    ["Manœuvre",p.maneuver],
+    ["Revêtement",p.surface],
+    ["Terrain",p.slope],
+    ["Éclairage",p.lighting],
+    ["Bruit la nuit",p.noise],
+    ["Sécurité",p.security],
+    ["Toilettes",p.toilets],
+    ["Douche",p.shower],
+    ["Restauration",p.food],
+    ["Carburant",p.fuel],
+    ["Commerces",p.shops]
+  ];
+  const detailsWrap=document.getElementById("cardDetails");
+  detailsWrap.innerHTML="";
+  details.filter(([,value])=>value).forEach(([label,value])=>{
+    const box=document.createElement("div");
+    box.className="detail-box";
+    box.innerHTML=`<span class="detail-label">${escapeHtml(label)}</span><span class="detail-value">${escapeHtml(value)}</span>`;
+    detailsWrap.appendChild(box);
+  });
 }
 function openForm(p=null){
   editingId=p?.id || null;
   document.getElementById("formTitle").textContent=p ? "Modifier le parking" : "Ajouter un parking";
-  ["name","address","lat","lng","places","maneuver","night","type","shops","comment"].forEach(id=>{
+  ["name","address","lat","lng","places","maneuver","access","surface","slope","night","lighting","noise","security","toilets","shower","food","fuel","type","shops","recommendation","comment"].forEach(id=>{
     document.getElementById(id).value = p ? (p[id] ?? "") : (id==="night" ? "unknown" : "");
   });
   document.getElementById("deleteBtn").classList.toggle("hidden",!p);
@@ -298,9 +408,20 @@ document.getElementById("saveBtn").addEventListener("click",()=>{
     name,address:document.getElementById("address").value.trim(),lat,lng,
     places:Number(document.getElementById("places").value)||0,
     maneuver:document.getElementById("maneuver").value,
+    access:document.getElementById("access").value,
+    surface:document.getElementById("surface").value,
+    slope:document.getElementById("slope").value,
     night:document.getElementById("night").value,
+    lighting:document.getElementById("lighting").value,
+    noise:document.getElementById("noise").value,
+    security:document.getElementById("security").value,
+    toilets:document.getElementById("toilets").value,
+    shower:document.getElementById("shower").value,
+    food:document.getElementById("food").value,
+    fuel:document.getElementById("fuel").value,
     type:document.getElementById("type").value,
     shops:document.getElementById("shops").value.trim(),
+    recommendation:document.getElementById("recommendation").value,
     comment:document.getElementById("comment").value.trim()
   };
   const i=parkings.findIndex(x=>x.id===p.id);
