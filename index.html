@@ -171,6 +171,30 @@
     .return-badge.yes{background:#e5f3ea;color:#185b36}
     .return-badge.no{background:#f8e2e2;color:#8a2222}
     .return-badge.unknown{background:#edf0ee;color:#56615b}
+    .address-tools{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      margin-top:7px;
+      flex-wrap:wrap;
+    }
+    .address-lookup{
+      padding:9px 11px;
+      border:1px solid var(--border);
+      background:#e7eee9;
+      color:var(--accent);
+      border-radius:10px;
+      font-size:13px;
+      font-weight:750;
+      cursor:pointer;
+    }
+    .address-lookup:disabled{opacity:.55;cursor:wait}
+    .address-status{
+      flex:1 1 170px;
+      min-height:17px;
+      color:var(--muted);
+      font-size:12px;
+    }
     .gps-status{
       margin-top:8px;
       font-size:13px;
@@ -261,7 +285,7 @@
 <body>
 <header>
   <h1>ParkPL</h1>
-  <p>Le carnet de route des parkings poids lourds <span class="version">v0.8</span></p>
+  <p>Le carnet de route des parkings poids lourds <span class="version">v0.9</span></p>
 </header>
 
 <section class="toolbar">
@@ -315,7 +339,14 @@
       <h4>Identification</h4>
       <div class="grid">
         <div class="field"><label for="name">Nom</label><input id="name"></div>
-        <div class="field"><label for="address">Adresse</label><input id="address"></div>
+        <div class="field">
+          <label for="address">Adresse</label>
+          <input id="address" autocomplete="street-address">
+          <div class="address-tools">
+            <button id="lookupAddressBtn" class="address-lookup" type="button">Trouver l’adresse</button>
+            <span id="addressStatus" class="address-status" aria-live="polite"></span>
+          </div>
+        </div>
         <div class="field"><label for="lat">Latitude</label><input id="lat" inputmode="decimal"></div>
         <div class="field"><label for="lng">Longitude</label><input id="lng" inputmode="decimal"></div>
         <div class="field"><label for="places">Places PL</label><input id="places" type="number" min="0"></div>
@@ -418,6 +449,7 @@ const defaultParking = {
   id: "fameck-001",
   name: "Zone commerciale de Fameck",
   address: "Rue Girolamo Cardano, 57290 Fameck",
+  addressSource: "manual",
   lat: 49.3028550747471,
   lng: 6.11785221844912,
   places: 11,
@@ -449,6 +481,7 @@ parkings = parkings.map(p => {
     : (p.photo ? [p.photo] : []);
   return {
     access:"", surface:"", slope:"", lighting:"", noise:"", security:"",
+    addressSource:"manual",
     toilets:"", shower:"", food:"", fuel:"", recommendation:"",
     rating:0, returnAgain:"unknown", photos:[],
     ...p,
@@ -598,12 +631,20 @@ function openForm(p=null){
     document.getElementById(id).value = p ? (p[id] ?? defaults[id] ?? "") : (defaults[id] ?? "");
   });
   currentPhotos=p && Array.isArray(p.photos) ? [...p.photos].slice(0,5) : [];
+  document.getElementById("addressStatus").textContent =
+    p?.addressSource==="gps" ? "Adresse trouvée automatiquement précédemment." : "";
   renderPhotoPreviews();
+  document.getElementById("address").dataset.source=p?.addressSource || "manual";
   document.getElementById("deleteBtn").classList.toggle("hidden",!p);
   document.getElementById("formSection").classList.remove("hidden");
   document.getElementById("formSection").scrollIntoView({behavior:"smooth"});
 }
-function closeForm(){currentPhotos=[];document.getElementById("formSection").classList.add("hidden");document.getElementById("formStatus").textContent="";}
+function closeForm(){
+  currentPhotos=[];
+  document.getElementById("formSection").classList.add("hidden");
+  document.getElementById("formStatus").textContent="";
+  document.getElementById("addressStatus").textContent="";
+}
 function escapeHtml(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));}
 
 document.getElementById("saveBtn").addEventListener("click",()=>{
@@ -615,7 +656,10 @@ document.getElementById("saveBtn").addEventListener("click",()=>{
   }
   const p={
     id: editingId || `p-${Date.now()}`,
-    name,address:document.getElementById("address").value.trim(),lat,lng,
+    name,
+    address:document.getElementById("address").value.trim(),
+    addressSource:document.getElementById("address").dataset.source || "manual",
+    lat,lng,
     places:Number(document.getElementById("places").value)||0,
     maneuver:document.getElementById("maneuver").value,
     access:document.getElementById("access").value,
@@ -742,6 +786,96 @@ photoInput.addEventListener("change",async()=>{
   }
 });
 
+
+function setAddressStatus(message){
+  document.getElementById("addressStatus").textContent=message || "";
+}
+
+function buildReadableAddress(data){
+  const a=data?.address || {};
+  const road=a.road || a.pedestrian || a.footway || a.path || a.cycleway || "";
+  const house=a.house_number || "";
+  const postcode=a.postcode || "";
+  const town=a.city || a.town || a.village || a.municipality || a.hamlet || "";
+  const locality=a.suburb || a.neighbourhood || a.city_district || "";
+  const country=a.country || "";
+
+  const street=[house,road].filter(Boolean).join(" ");
+  const city=[postcode,town].filter(Boolean).join(" ");
+  const parts=[street,locality && locality!==town ? locality : "",city,country]
+    .filter(Boolean);
+
+  return parts.join(", ") || data?.display_name || "";
+}
+
+async function lookupAddressFromCoordinates(lat,lng,{silent=false}={}){
+  const button=document.getElementById("lookupAddressBtn");
+  const addressInput=document.getElementById("address");
+
+  if(!Number.isFinite(lat) || !Number.isFinite(lng)){
+    setAddressStatus("Latitude ou longitude invalide.");
+    return "";
+  }
+
+  button.disabled=true;
+  if(!silent) setAddressStatus("Recherche de l’adresse…");
+
+  try{
+    const url=new URL("https://nominatim.openstreetmap.org/reverse");
+    url.searchParams.set("format","jsonv2");
+    url.searchParams.set("lat",String(lat));
+    url.searchParams.set("lon",String(lng));
+    url.searchParams.set("zoom","18");
+    url.searchParams.set("addressdetails","1");
+    url.searchParams.set("accept-language","fr");
+
+    const response=await fetch(url.toString(),{
+      headers:{"Accept":"application/json"}
+    });
+
+    if(!response.ok) throw new Error(`HTTP ${response.status}`);
+
+    const data=await response.json();
+    const readable=buildReadableAddress(data);
+
+    if(!readable){
+      setAddressStatus("Aucune adresse précise trouvée. Tu peux la saisir manuellement.");
+      return "";
+    }
+
+    addressInput.value=readable;
+    addressInput.dataset.source="gps";
+    setAddressStatus("Adresse trouvée automatiquement. Vérifie-la avant d’enregistrer.");
+
+    if(document.getElementById("name").value.trim()==="Nouveau parking"){
+      const a=data?.address || {};
+      const suggestion=a.amenity || a.shop || a.tourism || a.building ||
+        a.road || a.pedestrian || a.village || a.town || a.city || "";
+      if(suggestion){
+        document.getElementById("name").value=`Parking ${suggestion}`;
+      }
+    }
+
+    return readable;
+  }catch(error){
+    setAddressStatus("Adresse introuvable pour le moment. La connexion Internet est peut-être indisponible.");
+    return "";
+  }finally{
+    button.disabled=false;
+  }
+}
+
+document.getElementById("lookupAddressBtn").addEventListener("click",()=>{
+  const lat=parseFloat(document.getElementById("lat").value.replace(",","."));
+  const lng=parseFloat(document.getElementById("lng").value.replace(",","."));
+  lookupAddressFromCoordinates(lat,lng);
+});
+
+document.getElementById("address").addEventListener("input",event=>{
+  event.currentTarget.dataset.source="manual";
+  setAddressStatus("");
+});
+
 function setGpsStatus(message){
   document.getElementById("gpsStatus").textContent=message || "";
 }
@@ -766,6 +900,8 @@ function createParkingAtCurrentPosition(){
 
       document.getElementById("name").value="Nouveau parking";
       document.getElementById("address").value="";
+      document.getElementById("address").dataset.source="gps";
+      setAddressStatus("Recherche automatique de l’adresse…");
       document.getElementById("lat").value=latitude.toFixed(7);
       document.getElementById("lng").value=longitude.toFixed(7);
       document.getElementById("places").value="";
@@ -786,6 +922,7 @@ function createParkingAtCurrentPosition(){
         .openPopup();
 
       setGpsStatus(`Position trouvée — précision estimée : ${Math.round(accuracy)} m.`);
+      lookupAddressFromCoordinates(latitude,longitude,{silent:true});
       button.disabled=false;
       button.textContent="📍 Créer un parking ici";
 
@@ -833,8 +970,10 @@ document.getElementById("locateBtn").addEventListener("click",()=>{
     map.setView([latitude,longitude],17);
     L.circleMarker([latitude,longitude],{radius:8}).addTo(map).bindPopup("Votre position").openPopup();
     if(!document.getElementById("formSection").classList.contains("hidden")){
-      document.getElementById("lat").value=latitude;
-      document.getElementById("lng").value=longitude;
+      document.getElementById("lat").value=latitude.toFixed(7);
+      document.getElementById("lng").value=longitude.toFixed(7);
+      document.getElementById("address").dataset.source="gps";
+      lookupAddressFromCoordinates(latitude,longitude);
     }
   },()=>alert("Autorisez la localisation dans Safari pour utiliser cette fonction."),{enableHighAccuracy:true});
 });
