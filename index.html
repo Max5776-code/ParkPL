@@ -195,6 +195,115 @@
       color:var(--muted);
       font-size:12px;
     }
+    .nearby-section{
+      margin-top:16px;
+      padding-top:14px;
+      border-top:1px solid var(--border);
+    }
+    .nearby-section h3{margin:0 0 10px;font-size:17px}
+    .commerce-list{display:grid;gap:10px}
+    .commerce-card{
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:12px;
+      background:#fff;
+    }
+    .commerce-card summary{
+      cursor:pointer;
+      list-style:none;
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      align-items:center;
+      font-weight:800;
+    }
+    .commerce-card summary::-webkit-details-marker{display:none}
+    .commerce-card summary::after{
+      content:"＋";
+      font-size:20px;
+      line-height:1;
+      color:var(--accent2);
+    }
+    .commerce-card[open] summary::after{content:"−"}
+    .commerce-category{
+      display:block;
+      margin-top:3px;
+      color:var(--muted);
+      font-size:12px;
+      font-weight:600;
+    }
+    .commerce-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:8px;
+      margin-top:12px;
+    }
+    .commerce-info{
+      border-radius:11px;
+      padding:9px;
+      background:#f3f6f4;
+      min-height:56px;
+    }
+    .commerce-info.full{grid-column:1/-1}
+    .commerce-info span{display:block}
+    .commerce-info .label{
+      color:var(--muted);
+      font-size:11px;
+      margin-bottom:3px;
+    }
+    .commerce-info .value{font-size:13px;font-weight:700}
+    .commerce-editor{
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:12px;
+      margin-top:12px;
+      background:#fff;
+    }
+    .commerce-editor-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      margin-bottom:10px;
+    }
+    .commerce-editor-title{font-weight:850}
+    .commerce-delete{
+      border:1px solid #ddb3b3;
+      background:#fff5f5;
+      color:#912626;
+      border-radius:10px;
+      padding:8px 10px;
+      font-weight:750;
+      cursor:pointer;
+    }
+    .commerce-add{
+      width:100%;
+      border:1px dashed var(--accent2);
+      background:#edf5f0;
+      color:var(--accent);
+      border-radius:13px;
+      padding:12px;
+      font-weight:850;
+      cursor:pointer;
+      margin-top:10px;
+    }
+    .commerce-add:disabled{opacity:.55;cursor:not-allowed}
+    .commerce-help{
+      margin-top:8px;
+      font-size:12px;
+      color:var(--muted);
+    }
+    .commerce-empty{
+      padding:12px;
+      border-radius:12px;
+      background:#f3f6f4;
+      color:var(--muted);
+      font-size:13px;
+    }
+    @media(max-width:500px){
+      .commerce-grid{grid-template-columns:1fr}
+      .commerce-info.full{grid-column:auto}
+    }
     .gps-status{
       margin-top:8px;
       font-size:13px;
@@ -285,7 +394,7 @@
 <body>
 <header>
   <h1>ParkPL</h1>
-  <p>Le carnet de route des parkings poids lourds <span class="version">v0.9</span></p>
+  <p>Le carnet de route des parkings poids lourds <span class="version">v0.10</span></p>
 </header>
 
 <section class="toolbar">
@@ -321,6 +430,10 @@
     </div>
     <div id="cardReturn" class="return-badge unknown">Je ne sais pas encore si j’y retournerais</div>
     <div id="cardDetails" class="detail-grid"></div>
+    <div id="cardCommerceSection" class="nearby-section hidden">
+      <h3>Commerces à proximité</h3>
+      <div id="cardCommerceList" class="commerce-list"></div>
+    </div>
     <p id="cardComment">Parking public de 11 places. Nuit autorisée. E.Leclerc, Grand Frais et autres commerces à proximité.</p>
     <div class="actions">
       <button id="navigateBtn" class="primary" type="button">Itinéraire</button>
@@ -399,8 +512,19 @@
         <div class="field"><label for="shower">Douche</label><select id="shower"><option value="">À renseigner</option><option>Oui</option><option>Non</option><option>À proximité</option></select></div>
         <div class="field"><label for="food">Restauration</label><select id="food"><option value="">À renseigner</option><option>Sur place</option><option>À proximité</option><option>Distributeur seulement</option><option>Aucune</option></select></div>
         <div class="field"><label for="fuel">Carburant</label><select id="fuel"><option value="">À renseigner</option><option>Sur place</option><option>À proximité</option><option>Aucun</option></select></div>
-        <div class="field full"><label for="shops">Commerces et autres services</label><input id="shops" placeholder="E.Leclerc, Grand Frais, laverie, pharmacie…"></div>
+        <div class="field full">
+          <label for="shops">Ancienne note générale sur les commerces</label>
+          <input id="shops" placeholder="Texte libre conservé pour compatibilité avec les anciennes fiches">
+        </div>
       </div>
+    </div>
+
+    <div class="form-group">
+      <h4>Commerces à proximité</h4>
+      <div id="commerceEditors"></div>
+      <button id="addCommerceBtn" class="commerce-add" type="button">＋ Ajouter un commerce</button>
+      <div id="commerceCounter" class="commerce-help">0 commerce renseigné</div>
+      <div class="commerce-help">Tu peux renseigner jusqu’à 15 commerces ou services pour un même parking.</div>
     </div>
 
     <div class="form-group">
@@ -471,6 +595,32 @@ const defaultParking = {
   returnAgain: "unknown",
   photos: [],
   shops: "E.Leclerc, Grand Frais, autres commerces",
+  commerces: [
+    {
+      id:"c-fameck-1",
+      name:"E.Leclerc",
+      category:"Supermarché",
+      hours:"Horaires à vérifier",
+      distance:"À proximité",
+      walk:"Oui",
+      truckAccess:"À vérifier",
+      storeParking:"Oui",
+      nightParking:"À vérifier",
+      note:""
+    },
+    {
+      id:"c-fameck-2",
+      name:"Grand Frais",
+      category:"Supermarché / alimentation",
+      hours:"Horaires à vérifier",
+      distance:"À proximité",
+      walk:"Oui",
+      truckAccess:"À vérifier",
+      storeParking:"À vérifier",
+      nightParking:"À vérifier",
+      note:""
+    }
+  ],
   comment: "Parking public de 11 places. Nuit autorisée. Coordonnées GPS à confirmer sur place."
 };
 
@@ -483,14 +633,16 @@ parkings = parkings.map(p => {
     access:"", surface:"", slope:"", lighting:"", noise:"", security:"",
     addressSource:"manual",
     toilets:"", shower:"", food:"", fuel:"", recommendation:"",
-    rating:0, returnAgain:"unknown", photos:[],
+    rating:0, returnAgain:"unknown", photos:[], commerces:[],
     ...p,
-    photos:legacyPhotos.slice(0,5)
+    photos:legacyPhotos.slice(0,5),
+    commerces:Array.isArray(p.commerces) ? p.commerces.slice(0,15) : []
   };
 });
 let selectedId = null;
 let editingId = null;
 let currentPhotos = [];
+let currentCommerces = [];
 let markers = new Map();
 
 const map = L.map("map").setView([49.302855, 6.117852], 15);
@@ -504,7 +656,7 @@ function nightLabel(v){ return v==="yes" ? "Nuit autorisée" : v==="no" ? "Nuit 
 function chipsFor(p){
   const chips=[`${p.places || 0} places`, nightLabel(p.night), p.type || "Type inconnu"];
   if(p.maneuver) chips.push(`Manœuvre : ${p.maneuver}`);
-  if(p.shops) chips.push("Commerces proches");
+  if(p.shops || (Array.isArray(p.commerces) && p.commerces.length)) chips.push("Commerces proches");
   if(p.toilets==="Oui" || p.toilets==="Aux heures d’ouverture") chips.push("Toilettes");
   if(p.shower==="Oui" || p.shower==="À proximité") chips.push("Douche");
   return chips;
@@ -513,12 +665,15 @@ function filteredParkings(){
   const q=document.getElementById("search").value.trim().toLowerCase();
   const f=document.getElementById("filter").value;
   return parkings.filter(p=>{
-    const hay=[p.name,p.address,p.shops,p.comment].join(" ").toLowerCase();
+    const commerceText=(Array.isArray(p.commerces) ? p.commerces : [])
+      .map(c=>[c.name,c.category,c.hours,c.distance,c.note].join(" "))
+      .join(" ");
+    const hay=[p.name,p.address,p.shops,p.comment,commerceText].join(" ").toLowerCase();
     const matchQ=!q || hay.includes(q);
     const matchF=f==="all" ||
       (f==="night" && p.night==="yes") ||
       (f==="easy" && ["Très facile","Facile"].includes(p.maneuver)) ||
-      (f==="shops" && p.shops);
+      (f==="shops" && (p.shops || (Array.isArray(p.commerces) && p.commerces.length)));
     return matchQ && matchF;
   });
 }
@@ -611,8 +766,7 @@ function showCard(){
     ["Toilettes",p.toilets],
     ["Douche",p.shower],
     ["Restauration",p.food],
-    ["Carburant",p.fuel],
-    ["Commerces",p.shops]
+    ["Carburant",p.fuel]
   ];
   const detailsWrap=document.getElementById("cardDetails");
   detailsWrap.innerHTML="";
@@ -622,6 +776,72 @@ function showCard(){
     box.innerHTML=`<span class="detail-label">${escapeHtml(label)}</span><span class="detail-value">${escapeHtml(value)}</span>`;
     detailsWrap.appendChild(box);
   });
+
+  const commerceSection=document.getElementById("cardCommerceSection");
+  const commerceList=document.getElementById("cardCommerceList");
+  commerceList.innerHTML="";
+  const commerces=Array.isArray(p.commerces) ? p.commerces : [];
+
+  if(commerces.length || p.shops){
+    commerceSection.classList.remove("hidden");
+
+    commerces.forEach((commerce,index)=>{
+      const card=document.createElement("details");
+      card.className="commerce-card";
+      if(index===0) card.open=true;
+
+      const summary=document.createElement("summary");
+      const heading=document.createElement("span");
+      const name=document.createElement("span");
+      name.textContent=commerce.name || "Commerce sans nom";
+      const category=document.createElement("span");
+      category.className="commerce-category";
+      category.textContent=commerce.category || "Catégorie non renseignée";
+      heading.appendChild(name);
+      heading.appendChild(category);
+      summary.appendChild(heading);
+      card.appendChild(summary);
+
+      const grid=document.createElement("div");
+      grid.className="commerce-grid";
+
+      const infos=[
+        ["Horaires",commerce.hours],
+        ["Distance",commerce.distance],
+        ["Accessible à pied",commerce.walk],
+        ["Accès poids lourd",commerce.truckAccess],
+        ["Stationnement sur son parking",commerce.storeParking],
+        ["Nuit sur le parking",commerce.nightParking],
+        ["Remarque",commerce.note]
+      ];
+
+      infos.filter(([,value])=>value).forEach(([label,value])=>{
+        const info=document.createElement("div");
+        info.className=`commerce-info${label==="Remarque" ? " full" : ""}`;
+        const lab=document.createElement("span");
+        lab.className="label";
+        lab.textContent=label;
+        const val=document.createElement("span");
+        val.className="value";
+        val.textContent=value;
+        info.appendChild(lab);
+        info.appendChild(val);
+        grid.appendChild(info);
+      });
+
+      card.appendChild(grid);
+      commerceList.appendChild(card);
+    });
+
+    if(p.shops){
+      const legacy=document.createElement("div");
+      legacy.className="commerce-card";
+      legacy.innerHTML=`<strong>Note générale</strong><span class="commerce-category">${escapeHtml(p.shops)}</span>`;
+      commerceList.appendChild(legacy);
+    }
+  }else{
+    commerceSection.classList.add("hidden");
+  }
 }
 function openForm(p=null){
   editingId=p?.id || null;
@@ -631,9 +851,13 @@ function openForm(p=null){
     document.getElementById(id).value = p ? (p[id] ?? defaults[id] ?? "") : (defaults[id] ?? "");
   });
   currentPhotos=p && Array.isArray(p.photos) ? [...p.photos].slice(0,5) : [];
+  currentCommerces=p && Array.isArray(p.commerces)
+    ? p.commerces.map(c=>({...c})).slice(0,15)
+    : [];
   document.getElementById("addressStatus").textContent =
     p?.addressSource==="gps" ? "Adresse trouvée automatiquement précédemment." : "";
   renderPhotoPreviews();
+  renderCommerceEditors();
   document.getElementById("address").dataset.source=p?.addressSource || "manual";
   document.getElementById("deleteBtn").classList.toggle("hidden",!p);
   document.getElementById("formSection").classList.remove("hidden");
@@ -641,6 +865,7 @@ function openForm(p=null){
 }
 function closeForm(){
   currentPhotos=[];
+  currentCommerces=[];
   document.getElementById("formSection").classList.add("hidden");
   document.getElementById("formStatus").textContent="";
   document.getElementById("addressStatus").textContent="";
@@ -675,6 +900,17 @@ document.getElementById("saveBtn").addEventListener("click",()=>{
     fuel:document.getElementById("fuel").value,
     type:document.getElementById("type").value,
     shops:document.getElementById("shops").value.trim(),
+    commerces:currentCommerces
+      .map(c=>({
+        ...c,
+        name:(c.name||"").trim(),
+        category:(c.category||"").trim(),
+        hours:(c.hours||"").trim(),
+        distance:(c.distance||"").trim(),
+        note:(c.note||"").trim()
+      }))
+      .filter(c=>c.name || c.category || c.hours || c.note)
+      .slice(0,15),
     recommendation:document.getElementById("recommendation").value,
     rating:Number(document.getElementById("rating").value)||0,
     returnAgain:document.getElementById("returnAgain").value,
@@ -691,6 +927,198 @@ document.getElementById("deleteBtn").addEventListener("click",()=>{
   selectedId=null; saveData(); render(); closeForm();
 });
 
+
+
+const commerceCategories=[
+  "Supermarché",
+  "Alimentation",
+  "Boulangerie",
+  "Restaurant",
+  "Restaurant routier",
+  "Restauration rapide",
+  "Café / bar",
+  "Pharmacie",
+  "Station-service",
+  "Laverie",
+  "Sanitaires / douche",
+  "Garage / pièces PL",
+  "Hôtel",
+  "Centre commercial",
+  "Autre"
+];
+
+function commerceSelect(options,value,dataField,index){
+  const select=document.createElement("select");
+  select.dataset.field=dataField;
+  select.dataset.index=index;
+  options.forEach(optionValue=>{
+    const option=document.createElement("option");
+    option.value=optionValue;
+    option.textContent=optionValue || "À renseigner";
+    if(optionValue===value) option.selected=true;
+    select.appendChild(option);
+  });
+  select.addEventListener("change",event=>{
+    const i=Number(event.currentTarget.dataset.index);
+    currentCommerces[i][event.currentTarget.dataset.field]=event.currentTarget.value;
+  });
+  return select;
+}
+
+function commerceField(label,control,full=false){
+  const field=document.createElement("div");
+  field.className=`field${full ? " full" : ""}`;
+  const lab=document.createElement("label");
+  lab.textContent=label;
+  field.appendChild(lab);
+  field.appendChild(control);
+  return field;
+}
+
+function commerceTextInput(value,field,index,placeholder=""){
+  const input=document.createElement("input");
+  input.value=value || "";
+  input.placeholder=placeholder;
+  input.dataset.field=field;
+  input.dataset.index=index;
+  input.addEventListener("input",event=>{
+    const i=Number(event.currentTarget.dataset.index);
+    currentCommerces[i][event.currentTarget.dataset.field]=event.currentTarget.value;
+  });
+  return input;
+}
+
+function commerceTextarea(value,field,index,placeholder=""){
+  const area=document.createElement("textarea");
+  area.rows=3;
+  area.value=value || "";
+  area.placeholder=placeholder;
+  area.dataset.field=field;
+  area.dataset.index=index;
+  area.addEventListener("input",event=>{
+    const i=Number(event.currentTarget.dataset.index);
+    currentCommerces[i][event.currentTarget.dataset.field]=event.currentTarget.value;
+  });
+  return area;
+}
+
+function renderCommerceEditors(){
+  const wrap=document.getElementById("commerceEditors");
+  const addButton=document.getElementById("addCommerceBtn");
+  const counter=document.getElementById("commerceCounter");
+  wrap.innerHTML="";
+
+  if(!currentCommerces.length){
+    const empty=document.createElement("div");
+    empty.className="commerce-empty";
+    empty.textContent="Aucun commerce détaillé pour le moment.";
+    wrap.appendChild(empty);
+  }
+
+  currentCommerces.forEach((commerce,index)=>{
+    const editor=document.createElement("div");
+    editor.className="commerce-editor";
+
+    const head=document.createElement("div");
+    head.className="commerce-editor-head";
+
+    const title=document.createElement("div");
+    title.className="commerce-editor-title";
+    title.textContent=commerce.name ? commerce.name : `Commerce ${index+1}`;
+
+    const remove=document.createElement("button");
+    remove.type="button";
+    remove.className="commerce-delete";
+    remove.textContent="Supprimer";
+    remove.addEventListener("click",()=>{
+      currentCommerces.splice(index,1);
+      renderCommerceEditors();
+    });
+
+    head.appendChild(title);
+    head.appendChild(remove);
+    editor.appendChild(head);
+
+    const grid=document.createElement("div");
+    grid.className="grid";
+
+    grid.appendChild(commerceField(
+      "Nom du commerce",
+      commerceTextInput(commerce.name,"name",index,"E.Leclerc, pharmacie, boulangerie…")
+    ));
+
+    grid.appendChild(commerceField(
+      "Catégorie",
+      commerceSelect(["",...commerceCategories],commerce.category,"category",index)
+    ));
+
+    grid.appendChild(commerceField(
+      "Horaires d’ouverture",
+      commerceTextInput(commerce.hours,"hours",index,"Ex. lundi–samedi 8 h 30–20 h")
+    ));
+
+    grid.appendChild(commerceField(
+      "Distance / temps à pied",
+      commerceTextInput(commerce.distance,"distance",index,"Ex. 300 m · 4 min à pied")
+    ));
+
+    grid.appendChild(commerceField(
+      "Accessible à pied",
+      commerceSelect(["","Oui","Non","Difficile","À vérifier"],commerce.walk,"walk",index)
+    ));
+
+    grid.appendChild(commerceField(
+      "Accès direct en poids lourd",
+      commerceSelect(["","Oui","Non","Difficile","À vérifier"],commerce.truckAccess,"truckAccess",index)
+    ));
+
+    grid.appendChild(commerceField(
+      "Stationnement sur le parking du commerce",
+      commerceSelect(["","Oui","Non","Toléré","À vérifier"],commerce.storeParking,"storeParking",index)
+    ));
+
+    grid.appendChild(commerceField(
+      "Possibilité d’y passer la nuit",
+      commerceSelect(["","Autorisé","Toléré","Interdit","À vérifier"],commerce.nightParking,"nightParking",index)
+    ));
+
+    grid.appendChild(commerceField(
+      "Remarque",
+      commerceTextarea(commerce.note,"note",index,"Restrictions, barrière, horaires de livraison, conseil…"),
+      true
+    ));
+
+    editor.appendChild(grid);
+    wrap.appendChild(editor);
+  });
+
+  const count=currentCommerces.length;
+  counter.textContent=`${count} commerce${count>1 ? "s" : ""} renseigné${count>1 ? "s" : ""}`;
+  addButton.disabled=count>=15;
+  addButton.textContent=count>=15 ? "Maximum de 15 commerces atteint" : "＋ Ajouter un commerce";
+}
+
+document.getElementById("addCommerceBtn").addEventListener("click",()=>{
+  if(currentCommerces.length>=15) return;
+  currentCommerces.push({
+    id:`c-${Date.now()}-${Math.random().toString(36).slice(2,7)}`,
+    name:"",
+    category:"",
+    hours:"",
+    distance:"",
+    walk:"",
+    truckAccess:"",
+    storeParking:"",
+    nightParking:"",
+    note:""
+  });
+  renderCommerceEditors();
+
+  const editors=document.querySelectorAll(".commerce-editor");
+  const last=editors[editors.length-1];
+  last?.scrollIntoView({behavior:"smooth",block:"center"});
+  last?.querySelector("input")?.focus();
+});
 
 function renderPhotoPreviews(){
   const wrap=document.getElementById("photoPreviews");
@@ -910,7 +1338,9 @@ function createParkingAtCurrentPosition(){
       document.getElementById("rating").value="0";
       document.getElementById("returnAgain").value="unknown";
       currentPhotos=[];
+      currentCommerces=[];
       renderPhotoPreviews();
+      renderCommerceEditors();
       document.getElementById("comment").value=`Position relevée automatiquement par GPS (précision estimée : ${Math.round(accuracy)} m).`;
 
       map.setView([latitude,longitude],17,{animate:false});
