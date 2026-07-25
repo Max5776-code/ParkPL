@@ -6,8 +6,7 @@
   <meta name="theme-color" content="#173a2b">
   <title>ParkPL</title>
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        integrity="sha256-p4NxAoJBhIINfQ3FIRxQ4nQJksK1a1c1CkX1m1a1X1Y=" crossorigin="">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <style>
     :root {
       --bg:#f4f6f5; --panel:#fff; --text:#18201c; --muted:#66736c;
@@ -26,7 +25,7 @@
     .primary{background:var(--accent);color:#fff}
     .secondary{background:#e7eee9;color:var(--accent)}
     .danger{background:#f6e6e6;color:var(--danger)}
-    #map{height:46vh;min-height:330px}
+    #map{height:46vh;min-height:330px;position:relative;z-index:1;overflow:hidden}
     .content{padding:12px 12px calc(90px + env(safe-area-inset-bottom))}
     .card{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:14px;margin-bottom:12px}
     .card h2,.card h3{margin:0 0 8px}
@@ -263,6 +262,8 @@ document.getElementById("locateBtn").addEventListener("click",()=>{
 
 if("serviceWorker" in navigator){navigator.serviceWorker.register("service-worker.js").catch(()=>{});}
 render();
+setTimeout(()=>map.invalidateSize(),250);
+window.addEventListener("resize",()=>setTimeout(()=>map.invalidateSize(),150));
 </script>
 </body>
 </html>
