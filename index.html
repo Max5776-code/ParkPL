@@ -68,14 +68,30 @@
       box-shadow:0 6px 16px rgba(31,122,77,.18);
     }
     .gps-create:disabled{opacity:.6;cursor:wait}
-    .parking-photo{
-      width:100%;
-      max-height:260px;
+    .photo-gallery{
+      display:flex;
+      gap:10px;
+      overflow-x:auto;
+      padding:4px 0 10px;
+      scroll-snap-type:x mandatory;
+      -webkit-overflow-scrolling:touch;
+    }
+    .photo-gallery img{
+      width:88%;
+      max-width:420px;
+      height:240px;
       object-fit:cover;
+      flex:0 0 auto;
       border-radius:14px;
-      margin:12px 0;
       border:1px solid var(--border);
-      display:block;
+      scroll-snap-align:start;
+      background:#eef1ef;
+    }
+    .photo-counter{
+      font-size:12px;
+      color:var(--muted);
+      margin-top:-4px;
+      margin-bottom:8px;
     }
     .photo-box{
       border:1px dashed var(--border);
@@ -83,44 +99,78 @@
       padding:12px;
       background:#fff;
     }
-    .photo-actions{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      margin-top:10px;
-    }
-    .photo-button{
-      flex:1 1 150px;
-      padding:11px 12px;
+    .photo-add{
+      width:100%;
+      padding:12px;
+      border:none;
       border-radius:12px;
-      border:1px solid var(--border);
-      background:#fff;
-      font-weight:700;
-      cursor:pointer;
-    }
-    .photo-button.primary{
       background:#1f7a4d;
       color:#fff;
-      border-color:#1f7a4d;
+      font-weight:800;
+      cursor:pointer;
     }
-    .photo-button.danger{
-      color:#9a2424;
-      border-color:#dfb5b5;
-      background:#fff7f7;
+    .photo-add:disabled{opacity:.55;cursor:not-allowed}
+    .photo-previews{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:10px;
+      margin-top:12px;
     }
-    .photo-preview{
-      width:100%;
-      max-height:260px;
-      object-fit:cover;
+    .photo-item{
+      position:relative;
       border-radius:12px;
-      margin-top:10px;
-      display:none;
+      overflow:hidden;
+      background:#eef1ef;
+      border:1px solid var(--border);
+    }
+    .photo-item img{
+      display:block;
+      width:100%;
+      height:130px;
+      object-fit:cover;
+    }
+    .photo-remove{
+      position:absolute;
+      right:6px;
+      top:6px;
+      width:32px;
+      height:32px;
+      border-radius:50%;
+      border:none;
+      background:rgba(20,20,20,.78);
+      color:#fff;
+      font-size:18px;
+      font-weight:800;
+      cursor:pointer;
     }
     .photo-note{
       font-size:12px;
       color:var(--muted);
       margin-top:8px;
     }
+    .rating-line{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      margin:10px 0;
+    }
+    .stars{
+      font-size:22px;
+      letter-spacing:2px;
+      color:#b07b00;
+      font-weight:800;
+    }
+    .return-badge{
+      display:inline-block;
+      margin:8px 0 2px;
+      padding:9px 12px;
+      border-radius:999px;
+      font-weight:800;
+    }
+    .return-badge.yes{background:#e5f3ea;color:#185b36}
+    .return-badge.no{background:#f8e2e2;color:#8a2222}
+    .return-badge.unknown{background:#edf0ee;color:#56615b}
     .gps-status{
       margin-top:8px;
       font-size:13px;
@@ -211,7 +261,7 @@
 <body>
 <header>
   <h1>ParkPL</h1>
-  <p>Le carnet de route des parkings poids lourds <span class="version">v0.7</span></p>
+  <p>Le carnet de route des parkings poids lourds <span class="version">v0.8</span></p>
 </header>
 
 <section class="toolbar">
@@ -237,8 +287,15 @@
     <div class="meta">Parking sélectionné</div>
     <h2 id="cardTitle">Zone commerciale de Fameck</h2>
     <div id="cardAddress" class="meta">Rue Girolamo Cardano, 57290 Fameck</div>
+    <div id="cardPhotoGallery" class="photo-gallery hidden"></div>
+    <div id="cardPhotoCounter" class="photo-counter hidden"></div>
     <div class="chips" id="cardChips"></div>
     <div id="cardRecommendation" class="recommendation unknown">Appréciation non renseignée</div>
+    <div class="rating-line">
+      <span id="cardStars" class="stars">☆☆☆☆☆</span>
+      <span id="cardRatingText" class="meta">Pas encore noté</span>
+    </div>
+    <div id="cardReturn" class="return-badge unknown">Je ne sais pas encore si j’y retournerais</div>
     <div id="cardDetails" class="detail-grid"></div>
     <p id="cardComment">Parking public de 11 places. Nuit autorisée. E.Leclerc, Grand Frais et autres commerces à proximité.</p>
     <div class="actions">
@@ -315,25 +372,29 @@
       </div>
     </div>
 
-
     <div class="form-group">
-      <h4>Photo du parking</h4>
+      <h4>Photos du parking</h4>
       <div class="photo-box">
         <input id="photoInput" type="file" accept="image/*" capture="environment" hidden>
-        <button id="takePhotoBtn" class="photo-button primary" type="button">📷 Prendre une photo</button>
-        <img id="photoPreview" class="photo-preview" alt="Aperçu de la photo">
-        <div class="photo-actions">
-          <button id="replacePhotoBtn" class="photo-button" type="button" hidden>Remplacer la photo</button>
-          <button id="removePhotoBtn" class="photo-button danger" type="button" hidden>Supprimer la photo</button>
-        </div>
-        <div class="photo-note">La photo est compressée automatiquement et enregistrée uniquement sur cet appareil.</div>
+        <button id="addPhotoBtn" class="photo-add" type="button">📷 Prendre ou ajouter une photo</button>
+        <div id="photoPreviews" class="photo-previews"></div>
+        <div id="photoFormCounter" class="photo-note">0 photo sur 5</div>
+        <div class="photo-note">Les photos sont compressées et restent enregistrées uniquement sur cet appareil.</div>
       </div>
     </div>
 
     <div class="form-group">
       <h4>Avis du chauffeur</h4>
-      <div class="field"><label for="recommendation">Appréciation générale</label>
-        <select id="recommendation"><option value="">À renseigner</option><option value="good">Recommandé</option><option value="average">Acceptable / dépannage</option><option value="avoid">À éviter</option></select>
+      <div class="grid">
+        <div class="field"><label for="recommendation">Appréciation générale</label>
+          <select id="recommendation"><option value="">À renseigner</option><option value="good">Recommandé</option><option value="average">Acceptable / dépannage</option><option value="avoid">À éviter</option></select>
+        </div>
+        <div class="field"><label for="rating">Note globale</label>
+          <select id="rating"><option value="0">Pas encore noté</option><option value="1">★☆☆☆☆ — 1/5</option><option value="2">★★☆☆☆ — 2/5</option><option value="3">★★★☆☆ — 3/5</option><option value="4">★★★★☆ — 4/5</option><option value="5">★★★★★ — 5/5</option></select>
+        </div>
+        <div class="field full"><label for="returnAgain">J’y retournerais</label>
+          <select id="returnAgain"><option value="unknown">Je ne sais pas encore</option><option value="yes">Oui, sans hésiter</option><option value="no">Non</option></select>
+        </div>
       </div>
       <div class="field"><label for="comment">Commentaire chauffeur</label><textarea id="comment" rows="5" placeholder="Accès, tranquillité, horaires, restrictions ou conseils utiles…"></textarea></div>
     </div>
@@ -374,19 +435,29 @@ const defaultParking = {
   food: "À proximité",
   fuel: "À proximité",
   recommendation: "good",
-  photo: "",
+  rating: 0,
+  returnAgain: "unknown",
+  photos: [],
   shops: "E.Leclerc, Grand Frais, autres commerces",
   comment: "Parking public de 11 places. Nuit autorisée. Coordonnées GPS à confirmer sur place."
 };
 
 let parkings = JSON.parse(localStorage.getItem("parkpl_data") || "null") || [defaultParking];
-parkings = parkings.map(p => ({
-  access:"", surface:"", slope:"", lighting:"", noise:"", security:"",
-  toilets:"", shower:"", food:"", fuel:"", recommendation:"", photo:"",
-  ...p
-}));
+parkings = parkings.map(p => {
+  const legacyPhotos = Array.isArray(p.photos)
+    ? p.photos
+    : (p.photo ? [p.photo] : []);
+  return {
+    access:"", surface:"", slope:"", lighting:"", noise:"", security:"",
+    toilets:"", shower:"", food:"", fuel:"", recommendation:"",
+    rating:0, returnAgain:"unknown", photos:[],
+    ...p,
+    photos:legacyPhotos.slice(0,5)
+  };
+});
 let selectedId = null;
 let editingId = null;
+let currentPhotos = [];
 let markers = new Map();
 
 const map = L.map("map").setView([49.302855, 6.117852], 15);
@@ -433,7 +504,9 @@ function render(){
     row.type="button";
     row.className="secondary";
     row.style.cssText="display:block;width:100%;text-align:left;margin-top:8px";
-    row.innerHTML=`<strong>${escapeHtml(p.name)}</strong><br><span class="meta">${escapeHtml(p.address||"Adresse non renseignée")} · ${p.places||0} places</span>`;
+    const listStars=p.rating ? `${"★".repeat(Number(p.rating))}${"☆".repeat(5-Number(p.rating))}` : "";
+    const returnText=p.returnAgain==="yes" ? " · J’y retournerais" : p.returnAgain==="no" ? " · Je n’y retournerais pas" : "";
+    row.innerHTML=`<strong>${escapeHtml(p.name)}</strong><br><span class="meta">${escapeHtml(p.address||"Adresse non renseignée")} · ${p.places||0} places${listStars ? ` · ${listStars}` : ""}${returnText}</span>`;
     row.addEventListener("click",()=>{selectParking(p.id); map.setView([p.lat,p.lng],16); markers.get(p.id)?.openPopup();});
     list.appendChild(row);
   });
@@ -451,13 +524,24 @@ function showCard(){
   document.getElementById("cardTitle").textContent=p.name;
   document.getElementById("cardAddress").textContent=p.address || "Adresse non renseignée";
   document.getElementById("cardComment").textContent=p.comment || "Aucun commentaire.";
-  const cardPhoto=document.getElementById("cardPhoto");
-  if(p.photo){
-    cardPhoto.src=p.photo;
-    cardPhoto.classList.remove("hidden");
+
+  const gallery=document.getElementById("cardPhotoGallery");
+  const counter=document.getElementById("cardPhotoCounter");
+  gallery.innerHTML="";
+  const photos=Array.isArray(p.photos) ? p.photos.slice(0,5) : [];
+  if(photos.length){
+    photos.forEach((src,index)=>{
+      const img=document.createElement("img");
+      img.src=src;
+      img.alt=`Photo ${index+1} du parking ${p.name}`;
+      gallery.appendChild(img);
+    });
+    gallery.classList.remove("hidden");
+    counter.textContent=`${photos.length} photo${photos.length>1 ? "s" : ""} — faire glisser pour les voir`;
+    counter.classList.remove("hidden");
   }else{
-    cardPhoto.removeAttribute("src");
-    cardPhoto.classList.add("hidden");
+    gallery.classList.add("hidden");
+    counter.classList.add("hidden");
   }
 
   const wrap=document.getElementById("cardChips"); wrap.innerHTML="";
@@ -467,6 +551,21 @@ function showCard(){
   const recLabels={good:"Recommandé",average:"Acceptable / dépannage",avoid:"À éviter"};
   recommendation.className=`recommendation ${p.recommendation || "unknown"}`;
   recommendation.textContent=recLabels[p.recommendation] || "Appréciation non renseignée";
+
+  const rating=Math.max(0,Math.min(5,Number(p.rating)||0));
+  document.getElementById("cardStars").textContent=rating
+    ? `${"★".repeat(rating)}${"☆".repeat(5-rating)}`
+    : "☆☆☆☆☆";
+  document.getElementById("cardRatingText").textContent=rating ? `${rating}/5` : "Pas encore noté";
+
+  const returnBadge=document.getElementById("cardReturn");
+  const returnLabels={
+    yes:"J’y retournerais : oui",
+    no:"J’y retournerais : non",
+    unknown:"Je ne sais pas encore si j’y retournerais"
+  };
+  returnBadge.className=`return-badge ${p.returnAgain || "unknown"}`;
+  returnBadge.textContent=returnLabels[p.returnAgain] || returnLabels.unknown;
 
   const details=[
     ["Accès semi-remorque",p.access],
@@ -491,19 +590,20 @@ function showCard(){
     detailsWrap.appendChild(box);
   });
 }
-let currentPhotoData="";
-
 function openForm(p=null){
   editingId=p?.id || null;
   document.getElementById("formTitle").textContent=p ? "Modifier le parking" : "Ajouter un parking";
-  ["name","address","lat","lng","places","maneuver","access","surface","slope","night","lighting","noise","security","toilets","shower","food","fuel","type","shops","recommendation","comment"].forEach(id=>{
-    document.getElementById(id).value = p ? (p[id] ?? "") : (id==="night" ? "unknown" : "");
+  ["name","address","lat","lng","places","maneuver","access","surface","slope","night","lighting","noise","security","toilets","shower","food","fuel","type","shops","recommendation","rating","returnAgain","comment"].forEach(id=>{
+    const defaults={night:"unknown",rating:"0",returnAgain:"unknown"};
+    document.getElementById(id).value = p ? (p[id] ?? defaults[id] ?? "") : (defaults[id] ?? "");
   });
+  currentPhotos=p && Array.isArray(p.photos) ? [...p.photos].slice(0,5) : [];
+  renderPhotoPreviews();
   document.getElementById("deleteBtn").classList.toggle("hidden",!p);
   document.getElementById("formSection").classList.remove("hidden");
   document.getElementById("formSection").scrollIntoView({behavior:"smooth"});
 }
-function closeForm(){document.getElementById("formSection").classList.add("hidden");document.getElementById("formStatus").textContent="";}
+function closeForm(){currentPhotos=[];document.getElementById("formSection").classList.add("hidden");document.getElementById("formStatus").textContent="";}
 function escapeHtml(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));}
 
 document.getElementById("saveBtn").addEventListener("click",()=>{
@@ -532,7 +632,9 @@ document.getElementById("saveBtn").addEventListener("click",()=>{
     type:document.getElementById("type").value,
     shops:document.getElementById("shops").value.trim(),
     recommendation:document.getElementById("recommendation").value,
-    photo:currentPhotoData,
+    rating:Number(document.getElementById("rating").value)||0,
+    returnAgain:document.getElementById("returnAgain").value,
+    photos:[...currentPhotos].slice(0,5),
     comment:document.getElementById("comment").value.trim()
   };
   const i=parkings.findIndex(x=>x.id===p.id);
@@ -546,25 +648,40 @@ document.getElementById("deleteBtn").addEventListener("click",()=>{
 });
 
 
-function updatePhotoPreview(){
-  const preview=document.getElementById("photoPreview");
-  const replaceBtn=document.getElementById("replacePhotoBtn");
-  const removeBtn=document.getElementById("removePhotoBtn");
-  const takeBtn=document.getElementById("takePhotoBtn");
+function renderPhotoPreviews(){
+  const wrap=document.getElementById("photoPreviews");
+  const counter=document.getElementById("photoFormCounter");
+  const addButton=document.getElementById("addPhotoBtn");
+  wrap.innerHTML="";
 
-  if(currentPhotoData){
-    preview.src=currentPhotoData;
-    preview.style.display="block";
-    replaceBtn.hidden=false;
-    removeBtn.hidden=false;
-    takeBtn.hidden=true;
-  }else{
-    preview.removeAttribute("src");
-    preview.style.display="none";
-    replaceBtn.hidden=true;
-    removeBtn.hidden=true;
-    takeBtn.hidden=false;
-  }
+  currentPhotos.forEach((src,index)=>{
+    const item=document.createElement("div");
+    item.className="photo-item";
+
+    const img=document.createElement("img");
+    img.src=src;
+    img.alt=`Photo ${index+1}`;
+
+    const remove=document.createElement("button");
+    remove.type="button";
+    remove.className="photo-remove";
+    remove.setAttribute("aria-label",`Supprimer la photo ${index+1}`);
+    remove.textContent="×";
+    remove.addEventListener("click",()=>{
+      currentPhotos.splice(index,1);
+      renderPhotoPreviews();
+    });
+
+    item.appendChild(img);
+    item.appendChild(remove);
+    wrap.appendChild(item);
+  });
+
+  counter.textContent=`${currentPhotos.length} photo${currentPhotos.length>1 ? "s" : ""} sur 5`;
+  addButton.disabled=currentPhotos.length>=5;
+  addButton.textContent=currentPhotos.length>=5
+    ? "Maximum de 5 photos atteint"
+    : "📷 Prendre ou ajouter une photo";
 }
 
 function compressPhoto(file){
@@ -592,7 +709,7 @@ function compressPhoto(file){
         canvas.height=height;
         const ctx=canvas.getContext("2d");
         ctx.drawImage(img,0,0,width,height);
-        resolve(canvas.toDataURL("image/jpeg",0.78));
+        resolve(canvas.toDataURL("image/jpeg",0.72));
       };
       img.src=reader.result;
     };
@@ -601,32 +718,27 @@ function compressPhoto(file){
 }
 
 const photoInput=document.getElementById("photoInput");
-const takePhotoBtn=document.getElementById("takePhotoBtn");
-const replacePhotoBtn=document.getElementById("replacePhotoBtn");
-const removePhotoBtn=document.getElementById("removePhotoBtn");
+const addPhotoBtn=document.getElementById("addPhotoBtn");
 
-takePhotoBtn.addEventListener("click",()=>photoInput.click());
-replacePhotoBtn.addEventListener("click",()=>photoInput.click());
-removePhotoBtn.addEventListener("click",()=>{
-  currentPhotoData="";
+addPhotoBtn.addEventListener("click",()=>{
+  if(currentPhotos.length>=5) return;
   photoInput.value="";
-  updatePhotoPreview();
+  photoInput.click();
 });
 
 photoInput.addEventListener("change",async()=>{
   const file=photoInput.files?.[0];
-  if(!file) return;
+  if(!file || currentPhotos.length>=5) return;
 
   try{
-    takePhotoBtn.disabled=true;
-    replacePhotoBtn.disabled=true;
-    currentPhotoData=await compressPhoto(file);
-    updatePhotoPreview();
+    addPhotoBtn.disabled=true;
+    addPhotoBtn.textContent="Traitement de la photo…";
+    const compressed=await compressPhoto(file);
+    currentPhotos.push(compressed);
+    renderPhotoPreviews();
   }catch(error){
     alert("La photo n’a pas pu être traitée.");
-  }finally{
-    takePhotoBtn.disabled=false;
-    replacePhotoBtn.disabled=false;
+    renderPhotoPreviews();
   }
 });
 
@@ -659,8 +771,10 @@ function createParkingAtCurrentPosition(){
       document.getElementById("places").value="";
       document.getElementById("type").value="Public";
       document.getElementById("night").value="unknown";
-      currentPhotoData="";
-      updatePhotoPreview();
+      document.getElementById("rating").value="0";
+      document.getElementById("returnAgain").value="unknown";
+      currentPhotos=[];
+      renderPhotoPreviews();
       document.getElementById("comment").value=`Position relevée automatiquement par GPS (précision estimée : ${Math.round(accuracy)} m).`;
 
       map.setView([latitude,longitude],17,{animate:false});
