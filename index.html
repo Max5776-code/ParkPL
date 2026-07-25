@@ -481,7 +481,255 @@
 
     .leaflet-popup-content-wrapper{border-radius:18px}
     @media(max-width:500px){.toolbar{grid-template-columns:1fr auto}.toolbar select{grid-column:1/-1}.grid,.detail-grid{grid-template-columns:1fr 1fr}.detail-box{padding:9px}.detail-value{font-size:13px}}
-  </style>
+  
+/* ===== ParkPL v0.11.1 — identité visuelle réellement appliquée ===== */
+:root{
+  --bg:#f7f4ff;
+  --panel:#ffffff;
+  --panel-soft:#fff9ec;
+  --text:#27213f;
+  --muted:#746d88;
+  --accent:#5b45d6;
+  --accent2:#ff7d52;
+  --accent3:#20a77a;
+  --sun:#ffc845;
+  --border:#e5def3;
+  --danger:#b8324b;
+  --shadow:0 14px 34px rgba(65,45,130,.14);
+  --shadow-soft:0 7px 18px rgba(65,45,130,.10);
+}
+
+html,body{background:var(--bg)!important;color:var(--text)!important}
+
+body{
+  background:
+    radial-gradient(circle at 8% 8%,rgba(255,200,69,.22),transparent 23%),
+    radial-gradient(circle at 92% 15%,rgba(91,69,214,.17),transparent 26%),
+    linear-gradient(180deg,#fbf9ff 0%,#f4f0ff 100%)!important;
+}
+
+header{
+  background:linear-gradient(135deg,#5b45d6 0%,#7358e5 55%,#ff7d52 145%)!important;
+  padding:calc(15px + env(safe-area-inset-top)) 16px 16px!important;
+  box-shadow:0 9px 26px rgba(62,38,151,.28)!important;
+  border-radius:0 0 26px 26px!important;
+}
+
+header h1{
+  font-size:24px!important;
+  letter-spacing:-.5px!important;
+}
+
+header p{
+  opacity:.92!important;
+  font-size:12.5px!important;
+}
+
+.brand-row{display:flex!important;align-items:center!important;gap:12px!important}
+.brand-bubble{
+  width:50px!important;height:50px!important;
+  border-radius:18px!important;
+  background:#fff!important;
+  color:var(--accent)!important;
+  box-shadow:0 9px 20px rgba(38,20,112,.24)!important;
+  font-size:26px!important;
+}
+
+.version{
+  background:rgba(255,255,255,.22)!important;
+  border-radius:999px!important;
+  padding:3px 8px!important;
+  font-weight:900!important;
+  font-size:11px!important;
+}
+
+.stats-strip{
+  display:grid!important;
+  grid-template-columns:repeat(3,1fr)!important;
+  gap:8px!important;
+  padding:12px 12px 5px!important;
+}
+
+.stat-bubble{
+  background:#fff!important;
+  border:1px solid var(--border)!important;
+  border-radius:18px!important;
+  padding:10px 7px!important;
+  box-shadow:var(--shadow-soft)!important;
+}
+
+.stat-number{color:var(--accent)!important;font-size:18px!important;font-weight:900!important}
+.stat-label{color:var(--muted)!important;font-size:10.5px!important}
+
+.toolbar{
+  background:transparent!important;
+  border:0!important;
+  padding:10px 12px!important;
+  gap:8px!important;
+}
+
+input,select,textarea{
+  border:1.5px solid var(--border)!important;
+  border-radius:16px!important;
+  background:#fff!important;
+  color:var(--text)!important;
+  padding:12px!important;
+  box-shadow:none!important;
+}
+
+input:focus,select:focus,textarea:focus{
+  border-color:#9a8aed!important;
+  box-shadow:0 0 0 4px rgba(91,69,214,.11)!important;
+  outline:none!important;
+}
+
+button{
+  border-radius:16px!important;
+  font-weight:850!important;
+}
+
+.primary{
+  background:linear-gradient(135deg,#5b45d6,#7a60e9)!important;
+  color:#fff!important;
+  box-shadow:0 8px 17px rgba(91,69,214,.24)!important;
+}
+
+.secondary{
+  background:#eeeaff!important;
+  color:#5140b5!important;
+}
+
+.danger{
+  background:#ffebef!important;
+  color:#a52d47!important;
+}
+
+.gps-panel{background:transparent!important;padding:0 12px 12px!important}
+
+.gps-create{
+  background:linear-gradient(135deg,#18a474,#3ec593)!important;
+  color:#fff!important;
+  border-radius:19px!important;
+  box-shadow:0 10px 22px rgba(31,170,121,.25)!important;
+}
+
+#map{
+  margin:0 12px 14px!important;
+  border-radius:27px!important;
+  border:3px solid #fff!important;
+  box-shadow:var(--shadow)!important;
+  overflow:hidden!important;
+}
+
+.content{padding:12px 12px calc(92px + env(safe-area-inset-bottom))!important}
+
+.card{
+  background:rgba(255,255,255,.97)!important;
+  border:1px solid var(--border)!important;
+  border-radius:25px!important;
+  box-shadow:var(--shadow)!important;
+  padding:17px!important;
+  margin-bottom:14px!important;
+}
+
+#selectedCard{border-top:6px solid var(--accent2)!important}
+#listSection{border-top:6px solid var(--sun)!important}
+#formSection{border-top:6px solid var(--accent3)!important}
+
+.card h2{font-size:23px!important;letter-spacing:-.4px!important}
+.card h3{font-size:18px!important}
+.meta,.status,.photo-note,.commerce-help{color:var(--muted)!important}
+
+.chip{
+  background:#f0edff!important;
+  color:#5140b5!important;
+  border:1px solid #dfd8fb!important;
+  border-radius:999px!important;
+  padding:7px 10px!important;
+  font-weight:800!important;
+}
+
+.detail-box,.commerce-info{
+  background:#f8f6ff!important;
+  border:1px solid #ebe5fa!important;
+  border-radius:16px!important;
+}
+
+.form-group{
+  background:#fbfaff!important;
+  border:1px solid #ece6f8!important;
+  border-radius:21px!important;
+  padding:14px!important;
+}
+
+.form-group h4{color:#4f3fac!important;font-size:15.5px!important}
+
+.commerce-card,.commerce-editor,.photo-box{
+  background:#fff!important;
+  border:1px solid var(--border)!important;
+  border-radius:20px!important;
+  box-shadow:0 6px 16px rgba(64,45,125,.07)!important;
+}
+
+.commerce-add{
+  background:#eeeaff!important;
+  color:#5140b5!important;
+  border:2px dashed #9c8dec!important;
+  border-radius:17px!important;
+}
+
+.address-lookup{
+  background:#eeeaff!important;
+  color:#5140b5!important;
+  border:1px solid #dcd4fb!important;
+  border-radius:14px!important;
+}
+
+.photo-add{
+  background:linear-gradient(135deg,#20a77a,#3fc493)!important;
+  border-radius:16px!important;
+}
+
+.photo-gallery img,.photo-item{
+  border-radius:18px!important;
+}
+
+.recommendation,.return-badge{
+  border-radius:999px!important;
+  padding:10px 13px!important;
+}
+
+.parking-row{
+  background:#fff!important;
+  border:1px solid var(--border)!important;
+  border-radius:18px!important;
+  box-shadow:0 6px 15px rgba(64,45,125,.07)!important;
+  margin-bottom:10px!important;
+}
+
+.empty{
+  background:#f8f6ff!important;
+  border-radius:18px!important;
+}
+
+.leaflet-popup-content-wrapper{
+  border-radius:18px!important;
+  box-shadow:0 10px 28px rgba(45,31,91,.22)!important;
+}
+
+.leaflet-control-zoom a{
+  color:var(--accent)!important;
+  border-radius:12px!important;
+}
+
+/* Petites animations discrètes */
+.card,.stat-bubble,.gps-create{animation:parkplAppear .24s ease-out}
+@keyframes parkplAppear{
+  from{opacity:0;transform:translateY(7px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+</style>
 </head>
 <body>
 <header>
@@ -489,7 +737,7 @@
     <div class="brand-bubble" aria-hidden="true">🚛</div>
     <div class="brand-copy">
       <h1>ParkPL</h1>
-      <p>Le carnet de route des parkings poids lourds <span class="version">v0.11</span></p>
+      <p>Le carnet de route des parkings poids lourds <span class="version">v0.11.1</span></p>
     </div>
   </div>
 </header>
