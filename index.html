@@ -53,6 +53,26 @@
     .form-group{border:1px solid var(--border);border-radius:14px;padding:12px;margin:12px 0;background:#fafcfb}
     .form-group h4{margin:0 0 11px;font-size:15px}
     .full{grid-column:1/-1}
+    .gps-create{
+      width:100%;
+      margin-top:10px;
+      padding:14px 16px;
+      border:none;
+      border-radius:14px;
+      font-size:16px;
+      font-weight:800;
+      cursor:pointer;
+      background:#1f7a4d;
+      color:#fff;
+      box-shadow:0 6px 16px rgba(31,122,77,.18);
+    }
+    .gps-create:disabled{opacity:.6;cursor:wait}
+    .gps-status{
+      margin-top:8px;
+      font-size:13px;
+      color:var(--muted);
+      min-height:18px;
+    }
     .bottom{position:fixed;z-index:1100;left:0;right:0;bottom:0;background:rgba(255,255,255,.97);border-top:1px solid var(--border);padding:9px 12px calc(9px + env(safe-area-inset-bottom));display:grid;grid-template-columns:1fr 1fr;gap:8px}
 
     /* Correctif ParkPL 0.4 pour iPhone */
@@ -137,7 +157,7 @@
 <body>
 <header>
   <h1>ParkPL</h1>
-  <p>Le carnet de route des parkings poids lourds <span class="version">v0.5</span></p>
+  <p>Le carnet de route des parkings poids lourds <span class="version">v0.6</span></p>
 </header>
 
 <section class="toolbar">
@@ -433,6 +453,74 @@ document.getElementById("deleteBtn").addEventListener("click",()=>{
   parkings=parkings.filter(p=>p.id!==editingId);
   selectedId=parkings[0]?.id||null; saveData(); render(); closeForm();
 });
+
+function setGpsStatus(message){
+  document.getElementById("gpsStatus").textContent=message || "";
+}
+
+function createParkingAtCurrentPosition(){
+  const button=document.getElementById("createHereBtn");
+
+  if(!navigator.geolocation){
+    setGpsStatus("La géolocalisation n’est pas disponible sur cet appareil.");
+    return;
+  }
+
+  button.disabled=true;
+  button.textContent="Recherche de la position…";
+  setGpsStatus("Autorise ParkPL à accéder à ta position si Safari te le demande.");
+
+  navigator.geolocation.getCurrentPosition(
+    position=>{
+      const {latitude,longitude,accuracy}=position.coords;
+
+      openForm();
+
+      document.getElementById("name").value="Nouveau parking";
+      document.getElementById("address").value="";
+      document.getElementById("lat").value=latitude.toFixed(7);
+      document.getElementById("lng").value=longitude.toFixed(7);
+      document.getElementById("places").value="";
+      document.getElementById("type").value="Public";
+      document.getElementById("night").value="unknown";
+      document.getElementById("comment").value=`Position relevée automatiquement par GPS (précision estimée : ${Math.round(accuracy)} m).`;
+
+      map.setView([latitude,longitude],17,{animate:false});
+      if(window.tempGpsMarker){
+        map.removeLayer(window.tempGpsMarker);
+      }
+      window.tempGpsMarker=L.marker([latitude,longitude]).addTo(map)
+        .bindPopup("Position GPS actuelle")
+        .openPopup();
+
+      setGpsStatus(`Position trouvée — précision estimée : ${Math.round(accuracy)} m.`);
+      button.disabled=false;
+      button.textContent="📍 Créer un parking ici";
+
+      setTimeout(()=>{
+        document.getElementById("formSection").scrollIntoView({behavior:"smooth",block:"start"});
+      },150);
+    },
+    error=>{
+      const messages={
+        1:"Accès à la position refusé. Autorise la localisation pour Safari dans les réglages de l’iPhone.",
+        2:"Position GPS indisponible pour le moment.",
+        3:"La recherche de position a pris trop de temps. Réessaie à l’extérieur ou près d’une fenêtre."
+      };
+      setGpsStatus(messages[error.code] || "Impossible de récupérer la position.");
+      button.disabled=false;
+      button.textContent="📍 Créer un parking ici";
+    },
+    {
+      enableHighAccuracy:true,
+      timeout:15000,
+      maximumAge:0
+    }
+  );
+}
+
+document.getElementById("createHereBtn").addEventListener("click",createParkingAtCurrentPosition);
+
 document.getElementById("addBtn").addEventListener("click",()=>openForm());
 document.getElementById("cancelBtn").addEventListener("click",closeForm);
 document.getElementById("editBtn").addEventListener("click",()=>openForm(parkings.find(p=>p.id===selectedId)));

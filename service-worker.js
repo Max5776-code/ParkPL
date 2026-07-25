@@ -1,4 +1,4 @@
-const CACHE = "parkpl-v0.5";
+const CACHE = "parkpl-v0.6";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -23,6 +23,7 @@ self.addEventListener("activate", event => {
 
 self.addEventListener("fetch", event => {
   const request = event.request;
+
   if (request.mode === "navigate") {
     event.respondWith(
       fetch(request)
