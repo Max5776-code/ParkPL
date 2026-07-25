@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#173a2b">
+  <title>ParkPL</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIINfQ3FIRxQ4nQJksK1a1c1CkX1m1a1X1Y=" crossorigin="">
+  <style>
+    :root {
+      --bg:#f4f6f5; --panel:#fff; --text:#18201c; --muted:#66736c;
+      --accent:#173a2b; --accent2:#2e6b50; --border:#d8dfdb;
+      --danger:#a52a2a;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text)}
+    header{position:sticky;top:0;z-index:1000;background:var(--accent);color:#fff;padding:calc(12px + env(safe-area-inset-top)) 14px 12px}
+    header h1{font-size:20px;margin:0}
+    header p{font-size:13px;margin:4px 0 0;opacity:.8}
+    .toolbar{display:grid;grid-template-columns:1fr auto auto;gap:8px;padding:10px;background:var(--panel);border-bottom:1px solid var(--border)}
+    input,select,textarea,button{font:inherit}
+    input,select,textarea{width:100%;border:1px solid var(--border);border-radius:12px;padding:11px;background:#fff;color:var(--text)}
+    button{border:0;border-radius:12px;padding:11px 13px;font-weight:600}
+    .primary{background:var(--accent);color:#fff}
+    .secondary{background:#e7eee9;color:var(--accent)}
+    .danger{background:#f6e6e6;color:var(--danger)}
+    #map{height:46vh;min-height:330px}
+    .content{padding:12px 12px calc(90px + env(safe-area-inset-bottom))}
+    .card{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:14px;margin-bottom:12px}
+    .card h2,.card h3{margin:0 0 8px}
+    .meta{color:var(--muted);font-size:13px}
+    .chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+    .chip{background:#e7eee9;border-radius:999px;padding:6px 9px;font-size:13px}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+    .field{margin-bottom:11px}
+    .field label{display:block;font-size:13px;font-weight:600;margin-bottom:5px}
+    .actions{display:flex;flex-wrap:wrap;gap:8px}
+    .hidden{display:none!important}
+    .empty{text-align:center;color:var(--muted);padding:20px}
+    .status{font-size:13px;color:var(--muted);margin-top:8px}
+    .bottom{position:fixed;z-index:1100;left:0;right:0;bottom:0;background:rgba(255,255,255,.97);border-top:1px solid var(--border);padding:9px 12px calc(9px + env(safe-area-inset-bottom));display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .leaflet-popup-content-wrapper{border-radius:14px}
+    @media(max-width:500px){.toolbar{grid-template-columns:1fr auto}.toolbar select{grid-column:1/-1}.grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+<header>
+  <h1>ParkPL</h1>
+  <p>Le carnet de route des parkings poids lourds</p>
+</header>
+
+<section class="toolbar">
+  <input id="search" placeholder="Ville, adresse, commerce…">
+  <button id="locateBtn" class="secondary" type="button">Ma position</button>
+  <select id="filter">
+    <option value="all">Tous les parkings</option>
+    <option value="night">Nuit autorisée</option>
+    <option value="easy">Manœuvre facile</option>
+    <option value="shops">Commerces proches</option>
+  </select>
+</section>
+
+<div id="map"></div>
+
+<main class="content">
+  <section id="selectedCard" class="card">
+    <div class="meta">Parking sélectionné</div>
+    <h2 id="cardTitle">Zone commerciale de Fameck</h2>
+    <div id="cardAddress" class="meta">Rue Girolamo Cardano, 57290 Fameck</div>
+    <div class="chips" id="cardChips"></div>
+    <p id="cardComment">Parking public de 11 places. Nuit autorisée. E.Leclerc, Grand Frais et autres commerces à proximité.</p>
+    <div class="actions">
+      <button id="navigateBtn" class="primary" type="button">Itinéraire</button>
+      <button id="editBtn" class="secondary" type="button">Modifier</button>
+    </div>
+  </section>
+
+  <section id="listSection" class="card">
+    <h3>Parkings enregistrés</h3>
+    <div id="parkingList"></div>
+  </section>
+
+  <section id="formSection" class="card hidden">
+    <h3 id="formTitle">Ajouter un parking</h3>
+    <div class="grid">
+      <div class="field"><label for="name">Nom</label><input id="name"></div>
+      <div class="field"><label for="address">Adresse</label><input id="address"></div>
+      <div class="field"><label for="lat">Latitude</label><input id="lat" inputmode="decimal"></div>
+      <div class="field"><label for="lng">Longitude</label><input id="lng" inputmode="decimal"></div>
+      <div class="field"><label for="places">Places PL</label><input id="places" type="number" min="0"></div>
+      <div class="field"><label for="maneuver">Difficulté de manœuvre</label>
+        <select id="maneuver">
+          <option value="">À renseigner</option>
+          <option>Très facile</option><option>Facile</option><option>Moyenne</option><option>Difficile</option><option>Très difficile</option>
+        </select>
+      </div>
+      <div class="field"><label for="night">Nuit autorisée</label>
+        <select id="night"><option value="yes">Oui</option><option value="no">Non</option><option value="unknown">À vérifier</option></select>
+      </div>
+      <div class="field"><label for="type">Type</label>
+        <select id="type"><option>Public</option><option>Privé</option><option>Aire autoroutière</option><option>Restaurant routier</option><option>Chez un client</option></select>
+      </div>
+    </div>
+    <div class="field"><label for="shops">Commerces et services</label><input id="shops" placeholder="E.Leclerc, Grand Frais, toilettes…"></div>
+    <div class="field"><label for="comment">Commentaire chauffeur</label><textarea id="comment" rows="4"></textarea></div>
+    <div class="actions">
+      <button id="saveBtn" class="primary" type="button">Enregistrer</button>
+      <button id="cancelBtn" class="secondary" type="button">Annuler</button>
+      <button id="deleteBtn" class="danger hidden" type="button">Supprimer</button>
+    </div>
+    <div id="formStatus" class="status" aria-live="polite"></div>
+  </section>
+</main>
+
+<nav class="bottom">
+  <button id="addBtn" class="primary" type="button">+ Ajouter un parking</button>
+  <button id="showListBtn" class="secondary" type="button">Voir la liste</button>
+</nav>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+const defaultParking = {
+  id: "fameck-001",
+  name: "Zone commerciale de Fameck",
+  address: "Rue Girolamo Cardano, 57290 Fameck",
+  lat: 49.3028550747471,
+  lng: 6.11785221844912,
+  places: 11,
+  night: "yes",
+  type: "Public",
+  maneuver: "",
+  shops: "E.Leclerc, Grand Frais, autres commerces",
+  comment: "Parking public de 11 places. Nuit autorisée. Coordonnées GPS à confirmer sur place."
+};
+
+let parkings = JSON.parse(localStorage.getItem("parkpl_data") || "null") || [defaultParking];
+let selectedId = parkings[0]?.id || null;
+let editingId = null;
+let markers = new Map();
+
+const map = L.map("map").setView([49.302855, 6.117852], 15);
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  maxZoom: 19,
+  attribution: "&copy; OpenStreetMap"
+}).addTo(map);
+
+function saveData(){ localStorage.setItem("parkpl_data", JSON.stringify(parkings)); }
+function nightLabel(v){ return v==="yes" ? "Nuit autorisée" : v==="no" ? "Nuit interdite" : "Nuit à vérifier"; }
+function chipsFor(p){
+  const chips=[`${p.places || 0} places`, nightLabel(p.night), p.type || "Type inconnu"];
+  if(p.maneuver) chips.push(`Manœuvre : ${p.maneuver}`);
+  if(p.shops) chips.push("Commerces proches");
+  return chips;
+}
+function filteredParkings(){
+  const q=document.getElementById("search").value.trim().toLowerCase();
+  const f=document.getElementById("filter").value;
+  return parkings.filter(p=>{
+    const hay=[p.name,p.address,p.shops,p.comment].join(" ").toLowerCase();
+    const matchQ=!q || hay.includes(q);
+    const matchF=f==="all" ||
+      (f==="night" && p.night==="yes") ||
+      (f==="easy" && ["Très facile","Facile"].includes(p.maneuver)) ||
+      (f==="shops" && p.shops);
+    return matchQ && matchF;
+  });
+}
+function render(){
+  markers.forEach(m=>map.removeLayer(m)); markers.clear();
+  const list=document.getElementById("parkingList"); list.innerHTML="";
+  const visible=filteredParkings();
+
+  visible.forEach(p=>{
+    const marker=L.marker([p.lat,p.lng]).addTo(map);
+    marker.bindPopup(`<strong>${escapeHtml(p.name)}</strong><br>${escapeHtml(p.address||"")}<br>${p.places||0} places PL`);
+    marker.on("click",()=>selectParking(p.id));
+    markers.set(p.id,marker);
+
+    const row=document.createElement("button");
+    row.type="button";
+    row.className="secondary";
+    row.style.cssText="display:block;width:100%;text-align:left;margin-top:8px";
+    row.innerHTML=`<strong>${escapeHtml(p.name)}</strong><br><span class="meta">${escapeHtml(p.address||"Adresse non renseignée")} · ${p.places||0} places</span>`;
+    row.addEventListener("click",()=>{selectParking(p.id); map.setView([p.lat,p.lng],16); markers.get(p.id)?.openPopup();});
+    list.appendChild(row);
+  });
+  if(!visible.length) list.innerHTML='<div class="empty">Aucun parking ne correspond aux filtres.</div>';
+  if(selectedId && parkings.some(p=>p.id===selectedId)) showCard();
+}
+function selectParking(id){ selectedId=id; showCard(); }
+function showCard(){
+  const p=parkings.find(x=>x.id===selectedId); if(!p) return;
+  document.getElementById("cardTitle").textContent=p.name;
+  document.getElementById("cardAddress").textContent=p.address || "Adresse non renseignée";
+  document.getElementById("cardComment").textContent=p.comment || "Aucun commentaire.";
+  const wrap=document.getElementById("cardChips"); wrap.innerHTML="";
+  chipsFor(p).forEach(t=>{const s=document.createElement("span");s.className="chip";s.textContent=t;wrap.appendChild(s);});
+}
+function openForm(p=null){
+  editingId=p?.id || null;
+  document.getElementById("formTitle").textContent=p ? "Modifier le parking" : "Ajouter un parking";
+  ["name","address","lat","lng","places","maneuver","night","type","shops","comment"].forEach(id=>{
+    document.getElementById(id).value = p ? (p[id] ?? "") : (id==="night" ? "unknown" : "");
+  });
+  document.getElementById("deleteBtn").classList.toggle("hidden",!p);
+  document.getElementById("formSection").classList.remove("hidden");
+  document.getElementById("formSection").scrollIntoView({behavior:"smooth"});
+}
+function closeForm(){document.getElementById("formSection").classList.add("hidden");document.getElementById("formStatus").textContent="";}
+function escapeHtml(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));}
+
+document.getElementById("saveBtn").addEventListener("click",()=>{
+  const lat=parseFloat(document.getElementById("lat").value.replace(",","."));
+  const lng=parseFloat(document.getElementById("lng").value.replace(",","."));
+  const name=document.getElementById("name").value.trim();
+  if(!name || Number.isNaN(lat) || Number.isNaN(lng)){
+    document.getElementById("formStatus").textContent="Le nom, la latitude et la longitude sont obligatoires."; return;
+  }
+  const p={
+    id: editingId || `p-${Date.now()}`,
+    name,address:document.getElementById("address").value.trim(),lat,lng,
+    places:Number(document.getElementById("places").value)||0,
+    maneuver:document.getElementById("maneuver").value,
+    night:document.getElementById("night").value,
+    type:document.getElementById("type").value,
+    shops:document.getElementById("shops").value.trim(),
+    comment:document.getElementById("comment").value.trim()
+  };
+  const i=parkings.findIndex(x=>x.id===p.id);
+  if(i>=0) parkings[i]=p; else parkings.push(p);
+  selectedId=p.id; saveData(); render(); closeForm(); map.setView([p.lat,p.lng],16);
+});
+document.getElementById("deleteBtn").addEventListener("click",()=>{
+  if(!editingId) return;
+  parkings=parkings.filter(p=>p.id!==editingId);
+  selectedId=parkings[0]?.id||null; saveData(); render(); closeForm();
+});
+document.getElementById("addBtn").addEventListener("click",()=>openForm());
+document.getElementById("cancelBtn").addEventListener("click",closeForm);
+document.getElementById("editBtn").addEventListener("click",()=>openForm(parkings.find(p=>p.id===selectedId)));
+document.getElementById("showListBtn").addEventListener("click",()=>document.getElementById("listSection").scrollIntoView({behavior:"smooth"}));
+document.getElementById("search").addEventListener("input",render);
+document.getElementById("filter").addEventListener("change",render);
+document.getElementById("navigateBtn").addEventListener("click",()=>{
+  const p=parkings.find(x=>x.id===selectedId); if(!p) return;
+  location.href=`https://maps.apple.com/?daddr=${p.lat},${p.lng}&dirflg=d`;
+});
+document.getElementById("locateBtn").addEventListener("click",()=>{
+  if(!navigator.geolocation){alert("Géolocalisation non disponible.");return;}
+  navigator.geolocation.getCurrentPosition(pos=>{
+    const {latitude,longitude}=pos.coords;
+    map.setView([latitude,longitude],17);
+    L.circleMarker([latitude,longitude],{radius:8}).addTo(map).bindPopup("Votre position").openPopup();
+    if(!document.getElementById("formSection").classList.contains("hidden")){
+      document.getElementById("lat").value=latitude;
+      document.getElementById("lng").value=longitude;
+    }
+  },()=>alert("Autorisez la localisation dans Safari pour utiliser cette fonction."),{enableHighAccuracy:true});
+});
+
+if("serviceWorker" in navigator){navigator.serviceWorker.register("service-worker.js").catch(()=>{});}
+render();
+</script>
+</body>
+</html>

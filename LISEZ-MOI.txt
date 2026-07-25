@@ -1,0 +1,14 @@
+PARKPL v0.2
+
+Cette version contient :
+- carte OpenStreetMap zoomable ;
+- premier parking de Fameck ;
+- ajout, modification et suppression de parkings ;
+- recherche et filtres ;
+- sauvegarde locale dans le navigateur ;
+- récupération de la position GPS avec autorisation ;
+- bouton d’itinéraire vers Apple Plans ;
+- fichiers PWA pour ajout ultérieur à l’écran d’accueil.
+
+Pour fonctionner correctement comme application iPhone, le dossier doit être publié sur un hébergement HTTPS.
+Ouvrir simplement index.html permet surtout de tester l’interface sur ordinateur.
