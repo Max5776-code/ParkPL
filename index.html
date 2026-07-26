@@ -1088,6 +1088,167 @@ header::after{
   }
 }
 
+
+/* ===== ParkPL v0.13 — fiches restauration ===== */
+.stats-strip{
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+}
+.stat-bubble{
+  padding-left:4px!important;
+  padding-right:4px!important;
+}
+.stat-label{
+  line-height:1.05;
+}
+.restaurant-list{
+  display:grid;
+  gap:10px;
+}
+.restaurant-card{
+  border:1px solid #ffd9c9;
+  border-radius:20px;
+  background:linear-gradient(145deg,#fff 0%,#fff8f4 100%);
+  box-shadow:0 6px 16px rgba(144,74,37,.08);
+  overflow:hidden;
+}
+.restaurant-card summary{
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:13px 42px 13px 14px;
+  cursor:pointer;
+  list-style:none;
+  font-weight:850;
+}
+.restaurant-card summary::-webkit-details-marker{display:none}
+.restaurant-card summary::after{
+  content:"+";
+  position:absolute;
+  right:14px;
+  top:50%;
+  transform:translateY(-50%);
+  display:grid;
+  place-items:center;
+  width:25px;
+  height:25px;
+  border-radius:9px;
+  background:#fff0e9;
+  color:#b75130;
+  font-size:18px;
+  font-weight:900;
+}
+.restaurant-card[open] summary::after{content:"−"}
+.restaurant-category{
+  display:block;
+  margin-top:3px;
+  color:#a75a3d;
+  font-size:11.5px;
+  font-weight:700;
+}
+.restaurant-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+  padding:0 12px 12px;
+}
+.restaurant-info{
+  background:#fff;
+  border:1px solid #ffe2d6;
+  border-radius:15px;
+  padding:10px;
+}
+.restaurant-info.full{grid-column:1/-1}
+.restaurant-info .label{
+  display:block;
+  margin-bottom:3px;
+  color:#8c796f;
+  font-size:10.5px;
+  font-weight:750;
+}
+.restaurant-info .value{
+  display:block;
+  font-size:13px;
+  font-weight:750;
+}
+.restaurant-rating{
+  letter-spacing:.06em;
+  color:#ec9b16;
+  font-size:16px;
+}
+.restaurant-price{
+  letter-spacing:.08em;
+  color:#d06b41;
+  font-size:15px;
+}
+.restaurant-editor{
+  position:relative;
+  margin-bottom:12px;
+  padding:13px;
+  border:1px solid #ffd8c7;
+  border-radius:20px;
+  background:linear-gradient(145deg,#fff,#fff8f3);
+  box-shadow:0 6px 16px rgba(144,74,37,.07);
+}
+.restaurant-editor-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  margin-bottom:12px;
+}
+.restaurant-editor-title{
+  font-weight:850;
+  color:#8c4328;
+}
+.restaurant-delete{
+  padding:8px 10px!important;
+  background:#ffebef!important;
+  color:#a52d47!important;
+  box-shadow:none!important;
+}
+.restaurant-add{
+  width:100%;
+  background:#fff0e9!important;
+  color:#a84e2e!important;
+  border:2px dashed #f0a382!important;
+  border-radius:17px!important;
+  box-shadow:none!important;
+}
+.restaurant-add:disabled{opacity:.55;cursor:not-allowed}
+.restaurant-help{
+  margin-top:8px;
+  color:var(--muted);
+  font-size:11.5px;
+}
+.restaurant-empty{
+  margin-bottom:10px;
+  padding:13px;
+  border-radius:17px;
+  background:#fff8f4;
+  color:#8a756d;
+  text-align:center;
+  font-size:12px;
+}
+.restaurant-form-group{
+  border-top:4px solid #ff986e!important;
+}
+.star-select{
+  font-weight:800;
+}
+@media(max-width:500px){
+  .stats-strip{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+  .restaurant-grid{
+    grid-template-columns:1fr;
+  }
+  .restaurant-info.full{
+    grid-column:auto;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -1096,7 +1257,7 @@ header::after{
     <div class="brand-bubble" aria-hidden="true">🚛</div>
     <div class="brand-copy">
       <h1>ParkPL</h1>
-      <p>Le carnet de route des parkings poids lourds <span class="version">v0.12</span></p>
+      <p>Le carnet de route des parkings poids lourds <span class="version">v0.13</span></p>
     </div>
   </div>
 </header>
@@ -1105,10 +1266,11 @@ header::after{
   <div class="stat-bubble"><span id="statParkings" class="stat-number">0</span><span class="stat-label">parkings</span></div>
   <div class="stat-bubble"><span id="statPhotos" class="stat-number">0</span><span class="stat-label">photos</span></div>
   <div class="stat-bubble"><span id="statCommerces" class="stat-number">0</span><span class="stat-label">commerces</span></div>
+  <div class="stat-bubble"><span id="statRestaurants" class="stat-number">0</span><span class="stat-label">où manger</span></div>
 </section>
 
 <section class="toolbar">
-  <input id="search" placeholder="Ville, adresse, commerce…">
+  <input id="search" placeholder="Ville, adresse, commerce, restaurant…">
   <button id="locateBtn" class="secondary" type="button">◎ Ma position</button>
   <select id="filter">
     <option value="all">Tous les parkings</option>
@@ -1156,8 +1318,12 @@ header::after{
     <div id="cardReturn" class="return-badge unknown">Je ne sais pas encore si j’y retournerais</div>
     <div id="cardDetails" class="detail-grid"></div>
     <div id="cardCommerceSection" class="nearby-section hidden">
-      <h3>Commerces à proximité</h3>
+      <h3>🛒 Commerces à proximité</h3>
       <div id="cardCommerceList" class="commerce-list"></div>
+    </div>
+    <div id="cardRestaurantSection" class="nearby-section hidden">
+      <h3>🍽️ Où manger à proximité</h3>
+      <div id="cardRestaurantList" class="restaurant-list"></div>
     </div>
     <p id="cardComment">Parking public de 11 places. Nuit autorisée. E.Leclerc, Grand Frais et autres commerces à proximité.</p>
     <div class="actions">
@@ -1250,6 +1416,15 @@ header::after{
       <button id="addCommerceBtn" class="commerce-add" type="button">＋ Ajouter un commerce</button>
       <div id="commerceCounter" class="commerce-help">0 commerce renseigné</div>
       <div class="commerce-help">Tu peux renseigner jusqu’à 15 commerces ou services pour un même parking.</div>
+    </div>
+
+
+    <div class="form-group restaurant-form-group">
+      <h4>🍽️ Points de restauration à proximité</h4>
+      <div id="restaurantEditors"></div>
+      <button id="addRestaurantBtn" class="restaurant-add" type="button">＋ Ajouter un point de restauration</button>
+      <div id="restaurantCounter" class="restaurant-help">0 point de restauration renseigné</div>
+      <div class="restaurant-help">Tu peux renseigner jusqu’à 15 restaurants, snacks, boulangeries ou autres endroits où manger.</div>
     </div>
 
     <div class="form-group">
@@ -1358,16 +1533,18 @@ parkings = parkings.map(p => {
     access:"", surface:"", slope:"", lighting:"", noise:"", security:"",
     addressSource:"manual",
     toilets:"", shower:"", food:"", fuel:"", recommendation:"",
-    rating:0, returnAgain:"unknown", photos:[], commerces:[],
+    rating:0, returnAgain:"unknown", photos:[], commerces:[], restaurants:[],
     ...p,
     photos:legacyPhotos.slice(0,5),
-    commerces:Array.isArray(p.commerces) ? p.commerces.slice(0,15) : []
+    commerces:Array.isArray(p.commerces) ? p.commerces.slice(0,15) : [],
+    restaurants:Array.isArray(p.restaurants) ? p.restaurants.slice(0,15) : []
   };
 });
 let selectedId = null;
 let editingId = null;
 let currentPhotos = [];
 let currentCommerces = [];
+let currentRestaurants = [];
 let markers = new Map();
 
 const map = L.map("map").setView([49.302855, 6.117852], 15);
@@ -1382,6 +1559,7 @@ function chipsFor(p){
   const chips=[`${p.places || 0} places`, nightLabel(p.night), p.type || "Type inconnu"];
   if(p.maneuver) chips.push(`Manœuvre : ${p.maneuver}`);
   if(p.shops || (Array.isArray(p.commerces) && p.commerces.length)) chips.push("Commerces proches");
+  if(Array.isArray(p.restaurants) && p.restaurants.length) chips.push("Où manger");
   if(p.toilets==="Oui" || p.toilets==="Aux heures d’ouverture") chips.push("Toilettes");
   if(p.shower==="Oui" || p.shower==="À proximité") chips.push("Douche");
   return chips;
@@ -1393,7 +1571,13 @@ function filteredParkings(){
     const commerceText=(Array.isArray(p.commerces) ? p.commerces : [])
       .map(c=>[c.name,c.category,c.hours,c.distance,c.note].join(" "))
       .join(" ");
-    const hay=[p.name,p.address,p.shops,p.comment,commerceText].join(" ").toLowerCase();
+    const restaurantText=(Array.isArray(p.restaurants) ? p.restaurants : [])
+      .map(r=>[
+        r.name,r.establishmentType,r.cuisine,r.hours,r.distance,
+        r.specialties,r.note
+      ].join(" "))
+      .join(" ");
+    const hay=[p.name,p.address,p.shops,p.comment,commerceText,restaurantText].join(" ").toLowerCase();
     const matchQ=!q || hay.includes(q);
     const matchF=f==="all" ||
       (f==="night" && p.night==="yes") ||
@@ -1406,9 +1590,11 @@ function updateStats(){
   const parkingCount=parkings.length;
   const photoCount=parkings.reduce((sum,p)=>sum+(Array.isArray(p.photos)?p.photos.length:0),0);
   const commerceCount=parkings.reduce((sum,p)=>sum+(Array.isArray(p.commerces)?p.commerces.length:0),0);
+  const restaurantCount=parkings.reduce((sum,p)=>sum+(Array.isArray(p.restaurants)?p.restaurants.length:0),0);
   document.getElementById("statParkings").textContent=parkingCount;
   document.getElementById("statPhotos").textContent=photoCount;
   document.getElementById("statCommerces").textContent=commerceCount;
+  document.getElementById("statRestaurants").textContent=restaurantCount;
 }
 
 function parkingIcon(p){
@@ -1587,6 +1773,86 @@ function showCard(){
   }else{
     commerceSection.classList.add("hidden");
   }
+
+
+  const restaurantSection=document.getElementById("cardRestaurantSection");
+  const restaurantList=document.getElementById("cardRestaurantList");
+  restaurantList.innerHTML="";
+  const restaurants=Array.isArray(p.restaurants) ? p.restaurants : [];
+
+  if(restaurants.length){
+    restaurantSection.classList.remove("hidden");
+
+    restaurants.forEach((restaurant,index)=>{
+      const card=document.createElement("details");
+      card.className="restaurant-card";
+      if(index===0) card.open=true;
+
+      const summary=document.createElement("summary");
+      const heading=document.createElement("span");
+      const name=document.createElement("span");
+      name.textContent=restaurant.name || "Point de restauration sans nom";
+      const category=document.createElement("span");
+      category.className="restaurant-category";
+      category.textContent=[
+        restaurant.establishmentType,
+        restaurant.cuisine
+      ].filter(Boolean).join(" · ") || "Type non renseigné";
+      heading.appendChild(name);
+      heading.appendChild(category);
+      summary.appendChild(heading);
+      card.appendChild(summary);
+
+      const grid=document.createElement("div");
+      grid.className="restaurant-grid";
+
+      const appendRestaurantInfo=(label,value,full=false,extraClass="")=>{
+        if(!value) return;
+        const info=document.createElement("div");
+        info.className=`restaurant-info${full ? " full" : ""}`;
+        const lab=document.createElement("span");
+        lab.className="label";
+        lab.textContent=label;
+        const val=document.createElement("span");
+        val.className=`value ${extraClass}`.trim();
+        val.textContent=value;
+        info.appendChild(lab);
+        info.appendChild(val);
+        grid.appendChild(info);
+      };
+
+      const price=Math.max(0,Math.min(5,Number(restaurant.priceRating)||0));
+      const quality=Math.max(0,Math.min(5,Number(restaurant.qualityRating)||0));
+
+      appendRestaurantInfo("Horaires",restaurant.hours);
+      appendRestaurantInfo("Distance",restaurant.distance);
+      appendRestaurantInfo("Accessible à pied",restaurant.walk);
+      appendRestaurantInfo("Accès poids lourd",restaurant.truckAccess);
+      appendRestaurantInfo("Stationnement sur place",restaurant.restaurantParking);
+      appendRestaurantInfo("Nuit sur le parking",restaurant.nightParking);
+      appendRestaurantInfo(
+        "Niveau de prix",
+        price ? `${"€".repeat(price)}${"·".repeat(5-price)}` : "",
+        false,
+        "restaurant-price"
+      );
+      appendRestaurantInfo(
+        "Qualité des plats",
+        quality ? `${"★".repeat(quality)}${"☆".repeat(5-quality)}` : "",
+        false,
+        "restaurant-rating"
+      );
+      appendRestaurantInfo("Sur place / à emporter",restaurant.serviceMode);
+      appendRestaurantInfo("Spécialités / choix",restaurant.specialties,true);
+      appendRestaurantInfo("Remarque",restaurant.note,true);
+
+      card.appendChild(grid);
+      restaurantList.appendChild(card);
+    });
+  }else{
+    restaurantSection.classList.add("hidden");
+  }
+
 }
 function openForm(p=null){
   editingId=p?.id || null;
@@ -1599,10 +1865,14 @@ function openForm(p=null){
   currentCommerces=p && Array.isArray(p.commerces)
     ? p.commerces.map(c=>({...c})).slice(0,15)
     : [];
+  currentRestaurants=p && Array.isArray(p.restaurants)
+    ? p.restaurants.map(r=>({...r})).slice(0,15)
+    : [];
   document.getElementById("addressStatus").textContent =
     p?.addressSource==="gps" ? "Adresse trouvée automatiquement précédemment." : "";
   renderPhotoPreviews();
   renderCommerceEditors();
+  renderRestaurantEditors();
   document.getElementById("address").dataset.source=p?.addressSource || "manual";
   document.getElementById("deleteBtn").classList.toggle("hidden",!p);
   document.getElementById("formSection").classList.remove("hidden");
@@ -1611,6 +1881,7 @@ function openForm(p=null){
 function closeForm(){
   currentPhotos=[];
   currentCommerces=[];
+  currentRestaurants=[];
   document.getElementById("formSection").classList.add("hidden");
   document.getElementById("formStatus").textContent="";
   document.getElementById("addressStatus").textContent="";
@@ -1655,6 +1926,21 @@ document.getElementById("saveBtn").addEventListener("click",()=>{
         note:(c.note||"").trim()
       }))
       .filter(c=>c.name || c.category || c.hours || c.note)
+      .slice(0,15),
+    restaurants:currentRestaurants
+      .map(r=>({
+        ...r,
+        name:(r.name||"").trim(),
+        establishmentType:(r.establishmentType||"").trim(),
+        cuisine:(r.cuisine||"").trim(),
+        hours:(r.hours||"").trim(),
+        distance:(r.distance||"").trim(),
+        specialties:(r.specialties||"").trim(),
+        note:(r.note||"").trim(),
+        priceRating:Number(r.priceRating)||0,
+        qualityRating:Number(r.qualityRating)||0
+      }))
+      .filter(r=>r.name || r.establishmentType || r.cuisine || r.hours || r.specialties || r.note)
       .slice(0,15),
     recommendation:document.getElementById("recommendation").value,
     rating:Number(document.getElementById("rating").value)||0,
@@ -1864,6 +2150,298 @@ document.getElementById("addCommerceBtn").addEventListener("click",()=>{
   last?.scrollIntoView({behavior:"smooth",block:"center"});
   last?.querySelector("input")?.focus();
 });
+
+
+const restaurantTypes=[
+  "Restaurant routier",
+  "Restaurant traditionnel",
+  "Fast-food",
+  "Snack",
+  "Pizzeria",
+  "Kebab",
+  "Boulangerie / sandwicherie",
+  "Cafétéria",
+  "Buffet à volonté",
+  "Food truck",
+  "Station-service avec restauration",
+  "Bar / café avec restauration",
+  "Autre"
+];
+
+const cuisineTypes=[
+  "Française",
+  "Italienne",
+  "Américaine",
+  "Turque / kebab",
+  "Chinoise",
+  "Japonaise",
+  "Thaïlandaise",
+  "Indienne",
+  "Asiatique",
+  "Méditerranéenne",
+  "Cuisine du monde",
+  "Mixte",
+  "Autre"
+];
+
+function restaurantSelect(options,value,dataField,index){
+  const select=document.createElement("select");
+  select.dataset.field=dataField;
+  select.dataset.index=index;
+  options.forEach(optionValue=>{
+    const option=document.createElement("option");
+    option.value=optionValue;
+    option.textContent=optionValue || "À renseigner";
+    if(String(optionValue)===String(value ?? "")) option.selected=true;
+    select.appendChild(option);
+  });
+  select.addEventListener("change",event=>{
+    const i=Number(event.currentTarget.dataset.index);
+    currentRestaurants[i][event.currentTarget.dataset.field]=event.currentTarget.value;
+  });
+  return select;
+}
+
+function restaurantField(label,control,full=false){
+  const field=document.createElement("div");
+  field.className=`field${full ? " full" : ""}`;
+  const lab=document.createElement("label");
+  lab.textContent=label;
+  field.appendChild(lab);
+  field.appendChild(control);
+  return field;
+}
+
+function restaurantTextInput(value,field,index,placeholder=""){
+  const input=document.createElement("input");
+  input.value=value || "";
+  input.placeholder=placeholder;
+  input.dataset.field=field;
+  input.dataset.index=index;
+  input.addEventListener("input",event=>{
+    const i=Number(event.currentTarget.dataset.index);
+    currentRestaurants[i][event.currentTarget.dataset.field]=event.currentTarget.value;
+  });
+  return input;
+}
+
+function restaurantTextarea(value,field,index,placeholder=""){
+  const area=document.createElement("textarea");
+  area.rows=3;
+  area.value=value || "";
+  area.placeholder=placeholder;
+  area.dataset.field=field;
+  area.dataset.index=index;
+  area.addEventListener("input",event=>{
+    const i=Number(event.currentTarget.dataset.index);
+    currentRestaurants[i][event.currentTarget.dataset.field]=event.currentTarget.value;
+  });
+  return area;
+}
+
+function restaurantRatingSelect(value,field,index,kind){
+  const labels=kind==="price"
+    ? [
+        ["0","À renseigner"],
+        ["1","€ — Très économique"],
+        ["2","€€ — Raisonnable"],
+        ["3","€€€ — Assez cher"],
+        ["4","€€€€ — Cher"],
+        ["5","€€€€€ — Très cher"]
+      ]
+    : [
+        ["0","À renseigner"],
+        ["1","★☆☆☆☆ — Mauvais"],
+        ["2","★★☆☆☆ — Décevant"],
+        ["3","★★★☆☆ — Correct"],
+        ["4","★★★★☆ — Très bon"],
+        ["5","★★★★★ — Excellent"]
+      ];
+
+  const select=document.createElement("select");
+  select.className="star-select";
+  select.dataset.field=field;
+  select.dataset.index=index;
+  labels.forEach(([optionValue,label])=>{
+    const option=document.createElement("option");
+    option.value=optionValue;
+    option.textContent=label;
+    if(String(optionValue)===String(value || 0)) option.selected=true;
+    select.appendChild(option);
+  });
+  select.addEventListener("change",event=>{
+    const i=Number(event.currentTarget.dataset.index);
+    currentRestaurants[i][event.currentTarget.dataset.field]=Number(event.currentTarget.value)||0;
+  });
+  return select;
+}
+
+function renderRestaurantEditors(){
+  const wrap=document.getElementById("restaurantEditors");
+  const addButton=document.getElementById("addRestaurantBtn");
+  const counter=document.getElementById("restaurantCounter");
+  wrap.innerHTML="";
+
+  if(!currentRestaurants.length){
+    const empty=document.createElement("div");
+    empty.className="restaurant-empty";
+    empty.textContent="Aucun point de restauration détaillé pour le moment.";
+    wrap.appendChild(empty);
+  }
+
+  currentRestaurants.forEach((restaurant,index)=>{
+    const editor=document.createElement("div");
+    editor.className="restaurant-editor";
+
+    const head=document.createElement("div");
+    head.className="restaurant-editor-head";
+
+    const title=document.createElement("div");
+    title.className="restaurant-editor-title";
+    title.textContent=restaurant.name || `Point de restauration ${index+1}`;
+
+    const remove=document.createElement("button");
+    remove.type="button";
+    remove.className="restaurant-delete";
+    remove.textContent="Supprimer";
+    remove.addEventListener("click",()=>{
+      currentRestaurants.splice(index,1);
+      renderRestaurantEditors();
+    });
+
+    head.appendChild(title);
+    head.appendChild(remove);
+    editor.appendChild(head);
+
+    const grid=document.createElement("div");
+    grid.className="grid";
+
+    grid.appendChild(restaurantField(
+      "Nom de l’établissement",
+      restaurantTextInput(restaurant.name,"name",index,"Restaurant, snack, boulangerie…")
+    ));
+
+    grid.appendChild(restaurantField(
+      "Type d’établissement",
+      restaurantSelect(["",...restaurantTypes],restaurant.establishmentType,"establishmentType",index)
+    ));
+
+    grid.appendChild(restaurantField(
+      "Type de cuisine",
+      restaurantSelect(["",...cuisineTypes],restaurant.cuisine,"cuisine",index)
+    ));
+
+    grid.appendChild(restaurantField(
+      "Horaires d’ouverture",
+      restaurantTextInput(restaurant.hours,"hours",index,"Ex. 11 h 30–14 h et 18 h–22 h")
+    ));
+
+    grid.appendChild(restaurantField(
+      "Distance / temps à pied",
+      restaurantTextInput(restaurant.distance,"distance",index,"Ex. 500 m · 7 min à pied")
+    ));
+
+    grid.appendChild(restaurantField(
+      "Accessible à pied",
+      restaurantSelect(["","Oui","Non","Difficile","À vérifier"],restaurant.walk,"walk",index)
+    ));
+
+    grid.appendChild(restaurantField(
+      "Accès direct en poids lourd",
+      restaurantSelect(["","Oui","Non","Difficile","À vérifier"],restaurant.truckAccess,"truckAccess",index)
+    ));
+
+    grid.appendChild(restaurantField(
+      "Stationnement PL sur place",
+      restaurantSelect(["","Oui","Non","Toléré","À vérifier"],restaurant.restaurantParking,"restaurantParking",index)
+    ));
+
+    grid.appendChild(restaurantField(
+      "Possibilité d’y passer la nuit",
+      restaurantSelect(["","Autorisé","Toléré","Interdit","À vérifier"],restaurant.nightParking,"nightParking",index)
+    ));
+
+    grid.appendChild(restaurantField(
+      "Niveau de prix",
+      restaurantRatingSelect(restaurant.priceRating,"priceRating",index,"price")
+    ));
+
+    grid.appendChild(restaurantField(
+      "Qualité des plats",
+      restaurantRatingSelect(restaurant.qualityRating,"qualityRating",index,"quality")
+    ));
+
+    grid.appendChild(restaurantField(
+      "Service proposé",
+      restaurantSelect(
+        ["","Sur place","À emporter","Sur place et à emporter","Livraison","À vérifier"],
+        restaurant.serviceMode,
+        "serviceMode",
+        index
+      )
+    ));
+
+    grid.appendChild(restaurantField(
+      "Spécialités / choix disponibles",
+      restaurantTextarea(
+        restaurant.specialties,
+        "specialties",
+        index,
+        "Ex. menu routier, buffet, pizzas, burgers, plats du jour…"
+      ),
+      true
+    ));
+
+    grid.appendChild(restaurantField(
+      "Remarque",
+      restaurantTextarea(
+        restaurant.note,
+        "note",
+        index,
+        "Accueil, portions, attente, réservation, fermeture annuelle…"
+      ),
+      true
+    ));
+
+    editor.appendChild(grid);
+    wrap.appendChild(editor);
+  });
+
+  const count=currentRestaurants.length;
+  counter.textContent=`${count} point${count>1 ? "s" : ""} de restauration renseigné${count>1 ? "s" : ""}`;
+  addButton.disabled=count>=15;
+  addButton.textContent=count>=15
+    ? "Maximum de 15 points de restauration atteint"
+    : "＋ Ajouter un point de restauration";
+}
+
+document.getElementById("addRestaurantBtn").addEventListener("click",()=>{
+  if(currentRestaurants.length>=15) return;
+  currentRestaurants.push({
+    id:`r-${Date.now()}-${Math.random().toString(36).slice(2,7)}`,
+    name:"",
+    establishmentType:"",
+    cuisine:"",
+    hours:"",
+    distance:"",
+    walk:"",
+    truckAccess:"",
+    restaurantParking:"",
+    nightParking:"",
+    priceRating:0,
+    qualityRating:0,
+    serviceMode:"",
+    specialties:"",
+    note:""
+  });
+  renderRestaurantEditors();
+
+  const editors=document.querySelectorAll(".restaurant-editor");
+  const last=editors[editors.length-1];
+  last?.scrollIntoView({behavior:"smooth",block:"center"});
+  last?.querySelector("input")?.focus();
+});
+
 
 function renderPhotoPreviews(){
   const wrap=document.getElementById("photoPreviews");
