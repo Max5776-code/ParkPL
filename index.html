@@ -1249,6 +1249,153 @@ header::after{
   }
 }
 
+
+/* ===== ParkPL v0.14 — aperçu Street View / satellite ===== */
+.arrival-tools{
+  position:relative;
+  margin-top:18px;
+  padding:15px;
+  border:1px solid #ddd5f5;
+  border-radius:24px;
+  background:
+    radial-gradient(circle at 100% 0%,rgba(255,200,69,.22),transparent 34%),
+    linear-gradient(145deg,#f9f7ff 0%,#ffffff 65%);
+  overflow:hidden;
+}
+.arrival-tools::after{
+  content:"";
+  position:absolute;
+  width:100px;
+  height:100px;
+  right:-54px;
+  bottom:-62px;
+  border-radius:50%;
+  background:rgba(91,69,214,.08);
+  pointer-events:none;
+}
+.arrival-tools-head{
+  position:relative;
+  z-index:1;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:13px;
+}
+.arrival-tools-head h3{
+  margin:2px 0 0;
+  font-size:17px;
+}
+.arrival-eyebrow{
+  display:block;
+  color:var(--accent2);
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:.12em;
+}
+.arrival-icon{
+  display:grid;
+  place-items:center;
+  flex:0 0 43px;
+  width:43px;
+  height:43px;
+  border-radius:15px;
+  background:#fff;
+  box-shadow:0 7px 16px rgba(65,45,130,.11);
+  font-size:23px;
+}
+.map-actions-grid{
+  position:relative;
+  z-index:1;
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:9px;
+}
+.map-action{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-height:74px;
+  padding:11px!important;
+  border:1px solid transparent!important;
+  border-radius:18px!important;
+  text-align:left;
+  box-shadow:0 6px 14px rgba(65,45,130,.08)!important;
+}
+.map-action:active{
+  transform:scale(.985);
+}
+.map-action-icon{
+  display:grid;
+  place-items:center;
+  flex:0 0 38px;
+  width:38px;
+  height:38px;
+  border-radius:13px;
+  background:rgba(255,255,255,.84);
+  font-size:20px;
+}
+.map-action-copy{
+  display:block;
+  min-width:0;
+}
+.map-action-copy strong{
+  display:block;
+  font-size:13.5px;
+  line-height:1.15;
+}
+.map-action-copy small{
+  display:block;
+  margin-top:4px;
+  color:inherit;
+  opacity:.72;
+  font-size:10.5px;
+  line-height:1.25;
+  font-weight:650;
+}
+.route-action{
+  background:#ece8ff!important;
+  color:#5140b5!important;
+  border-color:#dcd4fb!important;
+}
+.street-action{
+  background:#e9f8ff!important;
+  color:#176b91!important;
+  border-color:#cceafa!important;
+}
+.satellite-action{
+  background:#eafff5!important;
+  color:#187957!important;
+  border-color:#c8f2df!important;
+}
+.google-action{
+  background:#fff2e8!important;
+  color:#a94e2e!important;
+  border-color:#ffd9c8!important;
+}
+.arrival-note{
+  position:relative;
+  z-index:1;
+  margin:11px 2px 0;
+  color:var(--muted);
+  font-size:10.5px;
+  line-height:1.35;
+}
+.edit-actions{
+  margin-top:11px!important;
+}
+.edit-actions button{
+  width:100%;
+}
+@media(max-width:390px){
+  .map-actions-grid{
+    grid-template-columns:1fr;
+  }
+  .map-action{
+    min-height:66px;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -1257,7 +1404,7 @@ header::after{
     <div class="brand-bubble" aria-hidden="true">🚛</div>
     <div class="brand-copy">
       <h1>ParkPL</h1>
-      <p>Le carnet de route des parkings poids lourds <span class="version">v0.13</span></p>
+      <p>Le carnet de route des parkings poids lourds <span class="version">v0.14 aperçu</span></p>
     </div>
   </div>
 </header>
@@ -1326,9 +1473,56 @@ header::after{
       <div id="cardRestaurantList" class="restaurant-list"></div>
     </div>
     <p id="cardComment">Parking public de 11 places. Nuit autorisée. E.Leclerc, Grand Frais et autres commerces à proximité.</p>
-    <div class="actions">
-      <button id="navigateBtn" class="primary" type="button">➜ Itinéraire</button>
-      <button id="editBtn" class="secondary" type="button">✎ Modifier</button>
+    <section class="arrival-tools" aria-label="Préparer l’arrivée">
+      <div class="arrival-tools-head">
+        <div>
+          <span class="arrival-eyebrow">PRÉPARER L’ARRIVÉE</span>
+          <h3>Voir les accès avant d’arriver</h3>
+        </div>
+        <span class="arrival-icon" aria-hidden="true">🚛</span>
+      </div>
+
+      <div class="map-actions-grid">
+        <button id="navigateBtn" class="map-action route-action" type="button">
+          <span class="map-action-icon">↗</span>
+          <span class="map-action-copy">
+            <strong>Itinéraire</strong>
+            <small>Guidage jusqu’au parking</small>
+          </span>
+        </button>
+
+        <button id="streetViewBtn" class="map-action street-action" type="button">
+          <span class="map-action-icon">📷</span>
+          <span class="map-action-copy">
+            <strong>Street View</strong>
+            <small>Voir l’entrée et la route</small>
+          </span>
+        </button>
+
+        <button id="satelliteBtn" class="map-action satellite-action" type="button">
+          <span class="map-action-icon">🛰️</span>
+          <span class="map-action-copy">
+            <strong>Vue satellite</strong>
+            <small>Observer la taille et les accès</small>
+          </span>
+        </button>
+
+        <button id="googleMapsBtn" class="map-action google-action" type="button">
+          <span class="map-action-icon">📍</span>
+          <span class="map-action-copy">
+            <strong>Google Maps</strong>
+            <small>Ouvrir la fiche complète</small>
+          </span>
+        </button>
+      </div>
+
+      <p class="arrival-note">
+        Les vues s’ouvrent dans Google Maps lorsqu’elles sont disponibles à cet emplacement.
+      </p>
+    </section>
+
+    <div class="actions edit-actions">
+      <button id="editBtn" class="secondary" type="button">✎ Modifier la fiche</button>
     </div>
   </section>
 
@@ -2720,9 +2914,47 @@ document.getElementById("editBtn").addEventListener("click",()=>openForm(parking
 document.getElementById("showListBtn").addEventListener("click",()=>document.getElementById("listSection").scrollIntoView({behavior:"smooth"}));
 document.getElementById("search").addEventListener("input",render);
 document.getElementById("filter").addEventListener("change",render);
+function selectedParkingCoordinates(){
+  const p=parkings.find(x=>x.id===selectedId);
+  if(!p) return null;
+  const lat=Number(p.lat);
+  const lng=Number(p.lng);
+  if(!Number.isFinite(lat) || !Number.isFinite(lng)){
+    alert("Les coordonnées de ce parking ne sont pas disponibles.");
+    return null;
+  }
+  return {p,lat,lng};
+}
+
+function openExternalMap(url){
+  const opened=window.open(url,"_blank","noopener,noreferrer");
+  if(!opened) location.href=url;
+}
+
 document.getElementById("navigateBtn").addEventListener("click",()=>{
-  const p=parkings.find(x=>x.id===selectedId); if(!p) return;
-  location.href=`https://maps.apple.com/?daddr=${p.lat},${p.lng}&dirflg=d`;
+  const data=selectedParkingCoordinates(); if(!data) return;
+  openExternalMap(`https://maps.apple.com/?daddr=${data.lat},${data.lng}&dirflg=d`);
+});
+
+document.getElementById("streetViewBtn").addEventListener("click",()=>{
+  const data=selectedParkingCoordinates(); if(!data) return;
+  openExternalMap(
+    `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${data.lat},${data.lng}`
+  );
+});
+
+document.getElementById("satelliteBtn").addEventListener("click",()=>{
+  const data=selectedParkingCoordinates(); if(!data) return;
+  openExternalMap(
+    `https://www.google.com/maps/@?api=1&map_action=map&center=${data.lat},${data.lng}&zoom=18&basemap=satellite`
+  );
+});
+
+document.getElementById("googleMapsBtn").addEventListener("click",()=>{
+  const data=selectedParkingCoordinates(); if(!data) return;
+  openExternalMap(
+    `https://www.google.com/maps/search/?api=1&query=${data.lat},${data.lng}`
+  );
 });
 document.getElementById("locateBtn").addEventListener("click",()=>{
   if(!navigator.geolocation){alert("Géolocalisation non disponible.");return;}

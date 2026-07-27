@@ -1,4 +1,4 @@
-const CACHE = "parkpl-v0.13";
+const CACHE = "parkpl-v0.14-preview";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -23,29 +23,19 @@ self.addEventListener("activate", event => {
 
 self.addEventListener("fetch", event => {
   const request = event.request;
-
-  if (request.mode === "navigate") {
+  if(request.mode === "navigate"){
     event.respondWith(
       fetch(request)
         .then(response => {
-          const copy = response.clone();
-          caches.open(CACHE).then(cache => cache.put("./index.html", copy));
+          const copy=response.clone();
+          caches.open(CACHE).then(cache=>cache.put("./index.html",copy));
           return response;
         })
-        .catch(() => caches.match("./index.html"))
+        .catch(()=>caches.match("./index.html"))
     );
     return;
   }
-
   event.respondWith(
-    caches.match(request).then(cached =>
-      cached || fetch(request).then(response => {
-        if (request.method === "GET" && response.ok) {
-          const copy = response.clone();
-          caches.open(CACHE).then(cache => cache.put(request, copy));
-        }
-        return response;
-      })
-    )
+    caches.match(request).then(cached => cached || fetch(request))
   );
 });
