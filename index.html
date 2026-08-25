@@ -1412,6 +1412,9 @@ header::after{
 .tree-parking-copy{min-width:0;flex:1}.tree-parking-title{display:block;font-size:13px;font-weight:850}.tree-parking-meta{display:block;margin-top:4px;color:var(--muted);font-size:10.5px}
 .explorer-empty{padding:18px 12px;border-radius:16px;background:#f8f6ff;color:var(--muted);text-align:center;font-size:12px}
 
+.backup-tools{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px}
+.backup-btn{font-size:12px!important;padding:10px!important}
+@media(max-width:390px){.backup-tools{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -1420,7 +1423,7 @@ header::after{
     <div class="brand-bubble" aria-hidden="true">🚛</div>
     <div class="brand-copy">
       <h1>ParkPL</h1>
-      <p>Le carnet de route des parkings poids lourds <span class="version">v0.15</span></p>
+      <p>Le carnet de route des parkings poids lourds <span class="version">v0.15.1</span></p>
     </div>
   </div>
 </header>
@@ -1550,6 +1553,11 @@ header::after{
     <span class="explorer-folder">🗂️</span>
   </div>
   <button id="toggleExplorerBtn" class="primary explorer-toggle" type="button">🗂 Ouvrir mes parkings</button>
+  <div class="backup-tools">
+    <button id="exportBackupBtn" class="secondary backup-btn" type="button">⬇️ Sauvegarder ma base</button>
+    <button id="importBackupBtn" class="secondary backup-btn" type="button">⬆️ Restaurer une sauvegarde</button>
+    <input id="importBackupInput" type="file" accept="application/json,.json" hidden>
+  </div>
   <div id="parkingExplorer" class="parking-explorer hidden">
     <div class="explorer-search"><input id="explorerSearch" type="search" placeholder="Ville, département, parking, commerce…"></div>
     <div id="explorerTree"></div>
@@ -1570,6 +1578,17 @@ header::after{
             <span id="addressStatus" class="address-status" aria-live="polite"></span>
           </div>
         </div>
+        <div class="field"><label for="country">Pays</label>
+          <select id="country">
+            <option value="France">France</option>
+            <option value="Belgique">Belgique</option>
+            <option value="Luxembourg">Luxembourg</option>
+            <option value="Allemagne">Allemagne</option>
+          </select>
+        </div>
+        <div class="field"><label for="departmentCode">Département (code)</label><input id="departmentCode" placeholder="Ex. 57"></div>
+        <div class="field"><label for="departmentName">Département (nom)</label><input id="departmentName" placeholder="Ex. Moselle"></div>
+        <div class="field"><label for="city">Ville</label><input id="city" placeholder="Ex. Fameck"></div>
         <div class="field"><label for="lat">Latitude</label><input id="lat" inputmode="decimal"></div>
         <div class="field"><label for="lng">Longitude</label><input id="lng" inputmode="decimal"></div>
         <div class="field"><label for="places">Places PL</label><input id="places" type="number" min="0"></div>
@@ -1692,6 +1711,10 @@ const defaultParking = {
   id: "fameck-001",
   name: "Zone commerciale de Fameck",
   address: "Rue Girolamo Cardano, 57290 Fameck",
+  country:"France",
+  departmentCode:"57",
+  departmentName:"Moselle",
+  city:"Fameck",
   addressSource: "manual",
   lat: 49.3028550747471,
   lng: 6.11785221844912,
@@ -1750,7 +1773,7 @@ parkings = parkings.map(p => {
     : (p.photo ? [p.photo] : []);
   return {
     access:"", surface:"", slope:"", lighting:"", noise:"", security:"",
-    addressSource:"manual",
+    addressSource:"manual", country:"France", departmentCode:"", departmentName:"", city:"",
     toilets:"", shower:"", food:"", fuel:"", recommendation:"",
     rating:0, returnAgain:"unknown", photos:[], commerces:[], restaurants:[],
     ...p,
@@ -1759,6 +1782,25 @@ parkings = parkings.map(p => {
     restaurants:Array.isArray(p.restaurants) ? p.restaurants.slice(0,15) : []
   };
 });
+
+parkings = parkings.map(p=>{
+  const copy={...p};
+  copy.country=copy.country || "France";
+  if(copy.country==="France"){
+    if(!copy.departmentCode || !copy.departmentName){
+      const d=inferFrenchDepartment(copy);
+      if(!copy.departmentCode && d.code!=="?") copy.departmentCode=d.code;
+      if(!copy.departmentName && d.name!=="Département à renseigner") copy.departmentName=d.name;
+    }
+    if(!copy.city){
+      const c=inferCity(copy);
+      if(c!=="Ville à renseigner") copy.city=c;
+    }
+  }
+  return copy;
+});
+saveData();
+
 let selectedId = null;
 let editingId = null;
 let currentPhotos = [];
@@ -2085,8 +2127,8 @@ function showCard(){
 function openForm(p=null){
   editingId=p?.id || null;
   document.getElementById("formTitle").textContent=p ? "Modifier le parking" : "Ajouter un parking";
-  ["name","address","lat","lng","places","maneuver","access","surface","slope","night","lighting","noise","security","toilets","shower","food","fuel","type","shops","recommendation","rating","returnAgain","comment"].forEach(id=>{
-    const defaults={night:"unknown",rating:"0",returnAgain:"unknown"};
+  ["name","address","country","departmentCode","departmentName","city","lat","lng","places","maneuver","access","surface","slope","night","lighting","noise","security","toilets","shower","food","fuel","type","shops","recommendation","rating","returnAgain","comment"].forEach(id=>{
+    const defaults={country:"France",night:"unknown",rating:"0",returnAgain:"unknown"};
     document.getElementById(id).value = p ? (p[id] ?? defaults[id] ?? "") : (defaults[id] ?? "");
   });
   currentPhotos=p && Array.isArray(p.photos) ? [...p.photos].slice(0,5) : [];
@@ -2128,6 +2170,10 @@ document.getElementById("saveBtn").addEventListener("click",()=>{
     name,
     address:document.getElementById("address").value.trim(),
     addressSource:document.getElementById("address").dataset.source || "manual",
+    country:document.getElementById("country").value,
+    departmentCode:document.getElementById("departmentCode").value.trim(),
+    departmentName:document.getElementById("departmentName").value.trim(),
+    city:document.getElementById("city").value.trim(),
     lat,lng,
     places:Number(document.getElementById("places").value)||0,
     maneuver:document.getElementById("maneuver").value,
@@ -2824,7 +2870,28 @@ async function lookupAddressFromCoordinates(lat,lng,{silent=false}={}){
 
     addressInput.value=readable;
     addressInput.dataset.source="gps";
-    setAddressStatus("Adresse trouvée automatiquement. Vérifie-la avant d’enregistrer.");
+
+    const a=data?.address || {};
+    const countryName=a.country || "";
+    if(/france/i.test(countryName)) document.getElementById("country").value="France";
+    else if(/belg/i.test(countryName)) document.getElementById("country").value="Belgique";
+    else if(/luxemb/i.test(countryName)) document.getElementById("country").value="Luxembourg";
+    else if(/german|allemagne|deutschland/i.test(countryName)) document.getElementById("country").value="Allemagne";
+
+    const cityName=a.city || a.town || a.village || a.municipality || a.hamlet || "";
+    if(cityName) document.getElementById("city").value=cityName;
+
+    const postcode=a.postcode || "";
+    if(document.getElementById("country").value==="France" && postcode){
+      let depCode="";
+      if(/^97[1-6]/.test(postcode)) depCode=postcode.slice(0,3);
+      else if(/^20/.test(postcode)) depCode="20";
+      else depCode=postcode.slice(0,2);
+      document.getElementById("departmentCode").value=depCode;
+      document.getElementById("departmentName").value=FR_DEPARTMENTS[depCode] || "";
+    }
+
+    setAddressStatus("Adresse, pays, département et ville trouvés automatiquement. Vérifie-les avant d’enregistrer.");
 
     if(document.getElementById("name").value.trim()==="Nouveau parking"){
       const a=data?.address || {};
@@ -3008,6 +3075,44 @@ document.getElementById("locateBtn").addEventListener("click",()=>{
 if("serviceWorker" in navigator){
   navigator.serviceWorker.register("./service-worker.js").catch(()=>{});
 }
+
+
+document.getElementById("exportBackupBtn").addEventListener("click",()=>{
+  const payload={app:"ParkPL",version:"0.15.1",exportedAt:new Date().toISOString(),parkings};
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;
+  a.download=`ParkPL-sauvegarde-${new Date().toISOString().slice(0,10)}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+});
+
+document.getElementById("importBackupBtn").addEventListener("click",()=>{
+  document.getElementById("importBackupInput").click();
+});
+
+document.getElementById("importBackupInput").addEventListener("change",async event=>{
+  const file=event.target.files?.[0];
+  if(!file) return;
+  try{
+    const data=JSON.parse(await file.text());
+    const imported=Array.isArray(data) ? data : data.parkings;
+    if(!Array.isArray(imported)) throw new Error("Format invalide");
+    if(!confirm(`Restaurer ${imported.length} parking${imported.length>1?"s":""} ? La base actuelle sera remplacée.`)) return;
+    parkings=imported;
+    saveData();
+    selectedId=null;
+    render();
+    alert("Sauvegarde restaurée.");
+  }catch(error){
+    alert("Impossible de restaurer ce fichier.");
+  }finally{
+    event.target.value="";
+  }
+});
 
 document.getElementById("toggleExplorerBtn").addEventListener("click",()=>{const e=document.getElementById("parkingExplorer"),b=document.getElementById("toggleExplorerBtn"),open=e.classList.contains("hidden");e.classList.toggle("hidden");b.textContent=open?"Fermer mes parkings":"🗂 Ouvrir mes parkings";if(open)renderExplorer()});
 document.getElementById("explorerSearch").addEventListener("input",renderExplorer);
