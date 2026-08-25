@@ -1396,6 +1396,22 @@ header::after{
   }
 }
 
+
+.explorer-launch-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:12px}
+.explorer-folder{display:grid;place-items:center;width:44px;height:44px;flex:0 0 44px;border-radius:16px;background:#fff7d7;font-size:23px}
+.explorer-toggle{width:100%}.parking-explorer{margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+.explorer-search{margin-bottom:10px}.tree-group{margin-bottom:8px;border:1px solid var(--border);border-radius:18px;background:#fff;overflow:hidden}
+.tree-summary{display:flex;justify-content:space-between;align-items:center;width:100%;padding:12px 13px!important;border-radius:0!important;background:#f8f6ff!important;color:var(--text)!important;box-shadow:none!important;text-align:left}
+.tree-summary strong{display:block;font-size:14px}.tree-summary small{display:block;color:var(--muted);font-size:10.5px;margin-top:2px}
+.tree-chevron{color:var(--accent);font-size:17px}.tree-group.open>.tree-summary .tree-chevron{transform:rotate(90deg)}
+.tree-body{display:none;padding:8px}.tree-group.open>.tree-body{display:block}
+.tree-country>.tree-summary{background:#eeeaff!important}.tree-department>.tree-summary{background:#fff8e8!important}.tree-city>.tree-summary{background:#eefbf6!important}
+.tree-department,.tree-city{border-radius:15px;margin-bottom:7px}
+.tree-parking{display:flex;align-items:center;gap:10px;width:100%;margin-bottom:7px;padding:11px!important;border:1px solid #ebe5fa!important;border-radius:15px!important;background:#fff!important;color:var(--text)!important;text-align:left;box-shadow:0 4px 11px rgba(64,45,125,.055)!important}
+.tree-parking-icon{display:grid;place-items:center;width:36px;height:36px;flex:0 0 36px;border-radius:12px;background:#f0edff;font-size:18px}
+.tree-parking-copy{min-width:0;flex:1}.tree-parking-title{display:block;font-size:13px;font-weight:850}.tree-parking-meta{display:block;margin-top:4px;color:var(--muted);font-size:10.5px}
+.explorer-empty{padding:18px 12px;border-radius:16px;background:#f8f6ff;color:var(--muted);text-align:center;font-size:12px}
+
 </style>
 </head>
 <body>
@@ -1404,7 +1420,7 @@ header::after{
     <div class="brand-bubble" aria-hidden="true">🚛</div>
     <div class="brand-copy">
       <h1>ParkPL</h1>
-      <p>Le carnet de route des parkings poids lourds <span class="version">v0.14 aperçu</span></p>
+      <p>Le carnet de route des parkings poids lourds <span class="version">v0.15</span></p>
     </div>
   </div>
 </header>
@@ -1526,10 +1542,19 @@ header::after{
     </div>
   </section>
 
-  <section id="listSection" class="card">
-    <h3>Parkings enregistrés</h3>
-    <div id="parkingList"></div>
-  </section>
+  
+<section id="listSection" class="card">
+  <div class="explorer-launch-head">
+    <div><span class="arrival-eyebrow">BASE PARKPL</span><h2>Mes parkings</h2>
+    <p class="meta">Classés par pays, département et ville.</p></div>
+    <span class="explorer-folder">🗂️</span>
+  </div>
+  <button id="toggleExplorerBtn" class="primary explorer-toggle" type="button">🗂 Ouvrir mes parkings</button>
+  <div id="parkingExplorer" class="parking-explorer hidden">
+    <div class="explorer-search"><input id="explorerSearch" type="search" placeholder="Ville, département, parking, commerce…"></div>
+    <div id="explorerTree"></div>
+  </div>
+</section>
 
   <section id="formSection" class="card hidden">
     <h3 id="formTitle">Ajouter un parking</h3>
@@ -1802,6 +1827,15 @@ function parkingIcon(p){
   });
 }
 
+
+const FR_DEPARTMENTS={"01":"Ain","02":"Aisne","03":"Allier","04":"Alpes-de-Haute-Provence","05":"Hautes-Alpes","06":"Alpes-Maritimes","07":"Ardèche","08":"Ardennes","09":"Ariège","10":"Aube","11":"Aude","12":"Aveyron","13":"Bouches-du-Rhône","14":"Calvados","15":"Cantal","16":"Charente","17":"Charente-Maritime","18":"Cher","19":"Corrèze","2A":"Corse-du-Sud","2B":"Haute-Corse","21":"Côte-d'Or","22":"Côtes-d'Armor","23":"Creuse","24":"Dordogne","25":"Doubs","26":"Drôme","27":"Eure","28":"Eure-et-Loir","29":"Finistère","30":"Gard","31":"Haute-Garonne","32":"Gers","33":"Gironde","34":"Hérault","35":"Ille-et-Vilaine","36":"Indre","37":"Indre-et-Loire","38":"Isère","39":"Jura","40":"Landes","41":"Loir-et-Cher","42":"Loire","43":"Haute-Loire","44":"Loire-Atlantique","45":"Loiret","46":"Lot","47":"Lot-et-Garonne","48":"Lozère","49":"Maine-et-Loire","50":"Manche","51":"Marne","52":"Haute-Marne","53":"Mayenne","54":"Meurthe-et-Moselle","55":"Meuse","56":"Morbihan","57":"Moselle","58":"Nièvre","59":"Nord","60":"Oise","61":"Orne","62":"Pas-de-Calais","63":"Puy-de-Dôme","64":"Pyrénées-Atlantiques","65":"Hautes-Pyrénées","66":"Pyrénées-Orientales","67":"Bas-Rhin","68":"Haut-Rhin","69":"Rhône","70":"Haute-Saône","71":"Saône-et-Loire","72":"Sarthe","73":"Savoie","74":"Haute-Savoie","75":"Paris","76":"Seine-Maritime","77":"Seine-et-Marne","78":"Yvelines","79":"Deux-Sèvres","80":"Somme","81":"Tarn","82":"Tarn-et-Garonne","83":"Var","84":"Vaucluse","85":"Vendée","86":"Vienne","87":"Haute-Vienne","88":"Vosges","89":"Yonne","90":"Territoire de Belfort","91":"Essonne","92":"Hauts-de-Seine","93":"Seine-Saint-Denis","94":"Val-de-Marne","95":"Val-d'Oise"};
+
+function geoCountry(p){const s=String(p.country||p.pays||"").toLowerCase();if(s.includes("belg"))return["BE","🇧🇪","Belgique"];if(s.includes("lux"))return["LU","🇱🇺","Luxembourg"];if(s.includes("allem")||s.includes("german"))return["DE","🇩🇪","Allemagne"];return["FR","🇫🇷","France"]}
+function geoDept(p){let c=String(p.departmentCode||p.department||p.departement||"").trim().toUpperCase(),n=String(p.departmentName||p.departementName||"").trim();if(!c){const x=String(p.address||"").match(/\\b(\\d{5})\\b/);if(x)c=x[1].slice(0,2)}if(FR_DEPARTMENTS[c])n=FR_DEPARTMENTS[c];return[c||"?",n||"Département à renseigner"]}
+function geoCity(p){if(p.city||p.ville)return String(p.city||p.ville).trim();const x=String(p.address||"").match(/\\b\\d{5}\\s+([^,]+)/);return x?x[1].trim():"Ville à renseigner"}
+function treeGroup(label,sub,level){const g=document.createElement("div");g.className=`tree-group tree-${level}`;const b=document.createElement("button");b.type="button";b.className="tree-summary";b.innerHTML=`<span><strong>${escapeHtml(label)}</strong><small>${escapeHtml(sub)}</small></span><span class="tree-chevron">›</span>`;const body=document.createElement("div");body.className="tree-body";b.onclick=()=>g.classList.toggle("open");g.append(b,body);return[g,body]}
+function explorerParking(p){const b=document.createElement("button");b.type="button";b.className="tree-parking";let meta=[];if(p.spaces)meta.push(`${p.spaces} places`);if(Number(p.rating)>0)meta.push(`${"★".repeat(Math.min(5,Number(p.rating)))}${"☆".repeat(Math.max(0,5-Number(p.rating)))}`);b.innerHTML=`<span class="tree-parking-icon">🚛</span><span class="tree-parking-copy"><span class="tree-parking-title">${escapeHtml(geoCity(p))} — ${escapeHtml(p.name||"Parking sans nom")}</span><span class="tree-parking-meta">${escapeHtml(meta.join(" · "))}</span></span>`;b.onclick=()=>{selectParking(p.id);document.getElementById("parkingExplorer").classList.add("hidden");document.getElementById("toggleExplorerBtn").textContent="🗂 Ouvrir mes parkings";document.getElementById("selectedCard")?.scrollIntoView({behavior:"smooth"})};return b}
+function renderExplorer(){const root=document.getElementById("explorerTree");if(!root)return;root.innerHTML="";const q=(document.getElementById("explorerSearch")?.value||"").toLowerCase();const src=parkings.filter(p=>!q||[p.name,p.address,p.shops,p.comment,geoCity(p),...geoDept(p),geoCountry(p)[2]].join(" ").toLowerCase().includes(q));if(!src.length){root.innerHTML='<div class="explorer-empty">Aucun parking trouvé.</div>';return}const cs=new Map();src.forEach(p=>{const c=geoCountry(p);if(!cs.has(c[0]))cs.set(c[0],{c,ps:[]});cs.get(c[0]).ps.push(p)});["FR","BE","LU","DE"].forEach(code=>{const o=cs.get(code);if(!o)return;const [cg,cb]=treeGroup(`${o.c[1]} ${o.c[2]}`,`${o.ps.length} parking${o.ps.length>1?"s":""}`,"country");if(q)cg.classList.add("open");if(code==="FR"){const ds=new Map();o.ps.forEach(p=>{const d=geoDept(p),k=d.join("|");if(!ds.has(k))ds.set(k,{d,ps:[]});ds.get(k).ps.push(p)});[...ds.values()].sort((a,b)=>a.d[0].localeCompare(b.d[0],"fr",{numeric:true})).forEach(o=>{const[dg,db]=treeGroup(`${o.d[0]} — ${o.d[1]}`,`${o.ps.length} parking${o.ps.length>1?"s":""}`,"department");if(q)dg.classList.add("open");const vs=new Map();o.ps.forEach(p=>{const v=geoCity(p);if(!vs.has(v))vs.set(v,[]);vs.get(v).push(p)});[...vs].sort((a,b)=>a[0].localeCompare(b[0],"fr")).forEach(([v,ps])=>{const[vg,vb]=treeGroup(v,`${ps.length} parking${ps.length>1?"s":""}`,"city");if(q)vg.classList.add("open");ps.forEach(p=>vb.appendChild(explorerParking(p)));db.appendChild(vg)});cb.appendChild(dg)})}else{o.ps.forEach(p=>cb.appendChild(explorerParking(p)))}root.appendChild(cg)})}
 function render(){
   markers.forEach(m=>map.removeLayer(m)); markers.clear();
   const list=document.getElementById("parkingList"); list.innerHTML="";
@@ -2974,6 +3008,9 @@ document.getElementById("locateBtn").addEventListener("click",()=>{
 if("serviceWorker" in navigator){
   navigator.serviceWorker.register("./service-worker.js").catch(()=>{});
 }
+
+document.getElementById("toggleExplorerBtn").addEventListener("click",()=>{const e=document.getElementById("parkingExplorer"),b=document.getElementById("toggleExplorerBtn"),open=e.classList.contains("hidden");e.classList.toggle("hidden");b.textContent=open?"Fermer mes parkings":"🗂 Ouvrir mes parkings";if(open)renderExplorer()});
+document.getElementById("explorerSearch").addEventListener("input",renderExplorer);
 render();
 
 function refreshMapLayout(){
