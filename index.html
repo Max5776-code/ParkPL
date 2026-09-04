@@ -1415,6 +1415,28 @@ header::after{
 .backup-tools{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px}
 .backup-btn{font-size:12px!important;padding:10px!important}
 @media(max-width:390px){.backup-tools{grid-template-columns:1fr}}
+
+.save-toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:3000;max-width:calc(100% - 32px);padding:12px 18px;border-radius:999px;background:#1f9f72;color:#fff;font-size:14px;font-weight:900;box-shadow:0 10px 26px rgba(31,159,114,.28);text-align:center}.save-toast.hidden{display:none!important}#saveBtn:disabled{opacity:.55;cursor:wait;transform:none!important}
+
+/* ===== ParkPL v0.16 — confort de la coupure ===== */
+.comfort-form-group{
+  border-top:4px solid #53c891!important;
+  background:
+    radial-gradient(circle at 100% 0%,rgba(83,200,145,.12),transparent 35%),
+    #fbfffd!important;
+}
+.comfort-form-group h4{color:#187957!important}
+.comfort-chip{
+  background:#eafff5!important;
+  color:#187957!important;
+  border-color:#c8f2df!important;
+}
+
+
+.photo-source-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.photo-library-add{background:#eeeaff!important;color:#5140b5!important;border:1px solid #dcd4fb!important;border-radius:16px!important;font-weight:850!important}
+.photo-library-add:disabled,.photo-add:disabled{opacity:.55;cursor:not-allowed}
+@media(max-width:390px){.photo-source-actions{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -1423,7 +1445,7 @@ header::after{
     <div class="brand-bubble" aria-hidden="true">🚛</div>
     <div class="brand-copy">
       <h1>ParkPL</h1>
-      <p>Le carnet de route des parkings poids lourds <span class="version">v0.15.1</span></p>
+      <p>Le carnet de route des parkings poids lourds <span class="version">v0.17</span></p>
     </div>
   </div>
 </header>
@@ -1513,8 +1535,8 @@ header::after{
         <button id="streetViewBtn" class="map-action street-action" type="button">
           <span class="map-action-icon">📷</span>
           <span class="map-action-copy">
-            <strong>Street View</strong>
-            <small>Voir l’entrée et la route</small>
+            <strong>Google Street View</strong>
+            <small>Voir l’entrée, les accès et les abords</small>
           </span>
         </button>
 
@@ -1634,13 +1656,46 @@ header::after{
       </div>
     </div>
 
+    <div class="form-group comfort-form-group">
+      <h4>🌿 Confort de la coupure</h4>
+      <div class="grid">
+        <div class="field"><label for="sportPrivacy">Sport à l’abri des regards</label>
+          <select id="sportPrivacy"><option value="">À renseigner</option><option>Oui</option><option>Non</option></select>
+        </div>
+        <div class="field"><label for="grassAvailable">Gazon disponible</label>
+          <select id="grassAvailable"><option value="">À renseigner</option><option>Oui</option><option>Non</option></select>
+        </div>
+        <div class="field"><label for="eatOutside">Manger dehors</label>
+          <select id="eatOutside"><option value="">À renseigner</option><option>Oui</option><option>Non</option></select>
+        </div>
+        <div class="field"><label for="tableAvailable">Table disponible</label>
+          <select id="tableAvailable"><option value="">À renseigner</option><option>Oui</option><option>Non</option></select>
+        </div>
+        <div class="field"><label for="trashBin">Poubelle</label>
+          <select id="trashBin"><option value="">À renseigner</option><option>Oui</option><option>Non</option></select>
+        </div>
+        <div class="field"><label for="waterPoint">Point d’eau</label>
+          <select id="waterPoint"><option value="">À renseigner</option><option>Oui</option><option>Non</option><option>À vérifier</option></select>
+        </div>
+      </div>
+    </div>
+
     <div class="form-group">
       <h4>Services disponibles</h4>
       <div class="grid">
-        <div class="field"><label for="toilets">Toilettes</label><select id="toilets"><option value="">À renseigner</option><option>Oui</option><option>Non</option><option>Aux heures d’ouverture</option></select></div>
+        <div class="field"><label for="toilets">Toilettes</label><select id="toilets"><option value="">À renseigner</option><option>Oui</option><option>Non</option><option>Aux heures d’ouverture</option><option>Sauvage</option></select></div>
         <div class="field"><label for="shower">Douche</label><select id="shower"><option value="">À renseigner</option><option>Oui</option><option>Non</option><option>À proximité</option></select></div>
         <div class="field"><label for="food">Restauration</label><select id="food"><option value="">À renseigner</option><option>Sur place</option><option>À proximité</option><option>Distributeur seulement</option><option>Aucune</option></select></div>
         <div class="field"><label for="fuel">Carburant</label><select id="fuel"><option value="">À renseigner</option><option>Sur place</option><option>À proximité</option><option>Aucun</option></select></div>
+        <div class="field"><label for="mobileNetwork">Réseau mobile / Internet</label>
+          <select id="mobileNetwork">
+            <option value="">À renseigner</option>
+            <option>5G</option>
+            <option>4G</option>
+            <option>Réseau perturbé</option>
+            <option>Pas de réseau</option>
+          </select>
+        </div>
         <div class="field full">
           <label for="shops">Ancienne note générale sur les commerces</label>
           <input id="shops" placeholder="Texte libre conservé pour compatibilité avec les anciennes fiches">
@@ -1668,11 +1723,15 @@ header::after{
     <div class="form-group">
       <h4>Photos du parking</h4>
       <div class="photo-box">
-        <input id="photoInput" type="file" accept="image/*" capture="environment" hidden>
-        <button id="addPhotoBtn" class="photo-add" type="button">📷 Prendre ou ajouter une photo</button>
+        <input id="cameraPhotoInput" type="file" accept="image/*" capture="environment" hidden>
+        <input id="libraryPhotoInput" type="file" accept="image/*" multiple hidden>
+        <div class="photo-source-actions">
+          <button id="takePhotoBtn" class="photo-add" type="button">📷 Prendre une photo</button>
+          <button id="choosePhotoBtn" class="photo-library-add" type="button">🖼️ Choisir dans Photos</button>
+        </div>
         <div id="photoPreviews" class="photo-previews"></div>
         <div id="photoFormCounter" class="photo-note">0 photo sur 5</div>
-        <div class="photo-note">Les photos sont compressées et restent enregistrées uniquement sur cet appareil.</div>
+        <div class="photo-note">Prends une photo ou choisis-la dans la photothèque. Maximum : 5 photos par parking.</div>
       </div>
     </div>
 
@@ -1694,12 +1753,13 @@ header::after{
     <div class="actions">
       <button id="saveBtn" class="primary" type="button">Enregistrer</button>
       <button id="cancelBtn" class="secondary" type="button">Annuler</button>
-      <button id="deleteBtn" class="danger hidden" type="button">Supprimer</button>
+      <button id="deleteBtn" class="danger hidden" type="button">🗑 Supprimer ce parking</button>
     </div>
     <div id="formStatus" class="status" aria-live="polite"></div>
   </section>
 </main>
 
+<div id="saveToast" class="save-toast hidden" role="status" aria-live="polite">Parking enregistré ✓</div>
 <nav class="bottom">
   <button id="addBtn" class="primary" type="button">+ Ajouter un parking</button>
   <button id="showListBtn" class="secondary" type="button">Voir la liste</button>
@@ -1728,6 +1788,12 @@ const defaultParking = {
   lighting: "",
   noise: "",
   security: "",
+  sportPrivacy: "",
+  grassAvailable: "",
+  eatOutside: "",
+  tableAvailable: "",
+  trashBin: "",
+  waterPoint: "",
   toilets: "Aux heures d’ouverture",
   shower: "Non",
   food: "À proximité",
@@ -1774,7 +1840,7 @@ parkings = parkings.map(p => {
   return {
     access:"", surface:"", slope:"", lighting:"", noise:"", security:"",
     addressSource:"manual", country:"France", departmentCode:"", departmentName:"", city:"",
-    toilets:"", shower:"", food:"", fuel:"", recommendation:"",
+    toilets:"", shower:"", food:"", fuel:"", mobileNetwork:"", recommendation:"", sportPrivacy:"", grassAvailable:"", eatOutside:"", tableAvailable:"", trashBin:"", waterPoint:"",
     rating:0, returnAgain:"unknown", photos:[], commerces:[], restaurants:[],
     ...p,
     photos:legacyPhotos.slice(0,5),
@@ -1823,6 +1889,15 @@ function chipsFor(p){
   if(Array.isArray(p.restaurants) && p.restaurants.length) chips.push("Où manger");
   if(p.toilets==="Oui" || p.toilets==="Aux heures d’ouverture") chips.push("Toilettes");
   if(p.shower==="Oui" || p.shower==="À proximité") chips.push("Douche");
+  if(p.sportPrivacy==="Oui") chips.push("Sport discret");
+  if(p.grassAvailable==="Oui") chips.push("Gazon");
+  if(p.tableAvailable==="Oui") chips.push("Table");
+  if(p.trashBin==="Oui") chips.push("Poubelle");
+  if(p.waterPoint==="Oui") chips.push("Point d’eau");
+  if(p.mobileNetwork==="5G") chips.push("5G");
+  else if(p.mobileNetwork==="4G") chips.push("4G");
+  else if(p.mobileNetwork==="Réseau perturbé") chips.push("Réseau perturbé");
+  else if(p.mobileNetwork==="Pas de réseau") chips.push("Pas de réseau");
   return chips;
 }
 function filteredParkings(){
@@ -1964,6 +2039,12 @@ function showCard(){
     ["Éclairage",p.lighting],
     ["Bruit la nuit",p.noise],
     ["Sécurité",p.security],
+    ["Sport à l’abri des regards",p.sportPrivacy],
+    ["Gazon disponible",p.grassAvailable],
+    ["Manger dehors",p.eatOutside],
+    ["Table disponible",p.tableAvailable],
+    ["Poubelle",p.trashBin],
+    ["Point d’eau",p.waterPoint],
     ["Toilettes",p.toilets],
     ["Douche",p.shower],
     ["Restauration",p.food],
@@ -2127,7 +2208,7 @@ function showCard(){
 function openForm(p=null){
   editingId=p?.id || null;
   document.getElementById("formTitle").textContent=p ? "Modifier le parking" : "Ajouter un parking";
-  ["name","address","country","departmentCode","departmentName","city","lat","lng","places","maneuver","access","surface","slope","night","lighting","noise","security","toilets","shower","food","fuel","type","shops","recommendation","rating","returnAgain","comment"].forEach(id=>{
+  ["name","address","country","departmentCode","departmentName","city","lat","lng","places","maneuver","access","surface","slope","night","lighting","noise","security","sportPrivacy","grassAvailable","eatOutside","tableAvailable","trashBin","waterPoint","toilets","shower","food","fuel","mobileNetwork","type","shops","recommendation","rating","returnAgain","comment"].forEach(id=>{
     const defaults={country:"France",night:"unknown",rating:"0",returnAgain:"unknown"};
     document.getElementById(id).value = p ? (p[id] ?? defaults[id] ?? "") : (defaults[id] ?? "");
   });
@@ -2158,12 +2239,20 @@ function closeForm(){
 }
 function escapeHtml(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));}
 
+let saveInProgress=false;
+let saveToastTimer=null;
+function showSaveToast(message="Parking enregistré ✓"){const toast=document.getElementById("saveToast");if(!toast)return;toast.textContent=message;toast.classList.remove("hidden");if(saveToastTimer)clearTimeout(saveToastTimer);saveToastTimer=setTimeout(()=>toast.classList.add("hidden"),2200);}
 document.getElementById("saveBtn").addEventListener("click",()=>{
+  if(saveInProgress) return;
+  saveInProgress=true;
+  const saveButton=document.getElementById("saveBtn");
+  saveButton.disabled=true;
+  saveButton.textContent="Enregistrement…";
   const lat=parseFloat(document.getElementById("lat").value.replace(",","."));
   const lng=parseFloat(document.getElementById("lng").value.replace(",","."));
   const name=document.getElementById("name").value.trim();
   if(!name || Number.isNaN(lat) || Number.isNaN(lng)){
-    document.getElementById("formStatus").textContent="Le nom, la latitude et la longitude sont obligatoires."; return;
+    document.getElementById("formStatus").textContent="Le nom, la latitude et la longitude sont obligatoires."; saveInProgress=false; saveButton.disabled=false; saveButton.textContent="Enregistrer"; return;
   }
   const p={
     id: editingId || `p-${Date.now()}`,
@@ -2184,10 +2273,17 @@ document.getElementById("saveBtn").addEventListener("click",()=>{
     lighting:document.getElementById("lighting").value,
     noise:document.getElementById("noise").value,
     security:document.getElementById("security").value,
+    sportPrivacy:document.getElementById("sportPrivacy").value,
+    grassAvailable:document.getElementById("grassAvailable").value,
+    eatOutside:document.getElementById("eatOutside").value,
+    tableAvailable:document.getElementById("tableAvailable").value,
+    trashBin:document.getElementById("trashBin").value,
+    waterPoint:document.getElementById("waterPoint").value,
     toilets:document.getElementById("toilets").value,
     shower:document.getElementById("shower").value,
     food:document.getElementById("food").value,
     fuel:document.getElementById("fuel").value,
+    mobileNetwork:document.getElementById("mobileNetwork").value,
     type:document.getElementById("type").value,
     shops:document.getElementById("shops").value.trim(),
     commerces:currentCommerces
@@ -2223,13 +2319,23 @@ document.getElementById("saveBtn").addEventListener("click",()=>{
     comment:document.getElementById("comment").value.trim()
   };
   const i=parkings.findIndex(x=>x.id===p.id);
+  const wasEditing=i>=0;
   if(i>=0) parkings[i]=p; else parkings.push(p);
   selectedId=p.id; saveData(); render(); closeForm(); map.setView([p.lat,p.lng],16);
+  showSaveToast(wasEditing ? "Parking modifié ✓" : "Parking enregistré ✓");
+  setTimeout(()=>{saveInProgress=false;saveButton.disabled=false;saveButton.textContent="Enregistrer";},500);
 });
 document.getElementById("deleteBtn").addEventListener("click",()=>{
   if(!editingId) return;
+  const p=parkings.find(x=>x.id===editingId);
+  const label=p?.name || "ce parking";
+  if(!confirm(`Supprimer définitivement « ${label} » ?`)) return;
   parkings=parkings.filter(p=>p.id!==editingId);
-  selectedId=null; saveData(); render(); closeForm();
+  selectedId=null;
+  saveData();
+  render();
+  closeForm();
+  showSaveToast("Parking supprimé");
 });
 
 
@@ -2720,7 +2826,8 @@ document.getElementById("addRestaurantBtn").addEventListener("click",()=>{
 function renderPhotoPreviews(){
   const wrap=document.getElementById("photoPreviews");
   const counter=document.getElementById("photoFormCounter");
-  const addButton=document.getElementById("addPhotoBtn");
+  const takeButton=document.getElementById("takePhotoBtn");
+  const chooseButton=document.getElementById("choosePhotoBtn");
   wrap.innerHTML="";
 
   currentPhotos.forEach((src,index)=>{
@@ -2747,10 +2854,11 @@ function renderPhotoPreviews(){
   });
 
   counter.textContent=`${currentPhotos.length} photo${currentPhotos.length>1 ? "s" : ""} sur 5`;
-  addButton.disabled=currentPhotos.length>=5;
-  addButton.textContent=currentPhotos.length>=5
-    ? "Maximum de 5 photos atteint"
-    : "📷 Prendre ou ajouter une photo";
+  const full=currentPhotos.length>=5;
+  takeButton.disabled=full;
+  chooseButton.disabled=full;
+  takeButton.textContent=full ? "Maximum de 5 photos atteint" : "📷 Prendre une photo";
+  chooseButton.textContent=full ? "Maximum de 5 photos atteint" : "🖼️ Choisir dans Photos";
 }
 
 function compressPhoto(file){
@@ -2786,31 +2894,52 @@ function compressPhoto(file){
   });
 }
 
-const photoInput=document.getElementById("photoInput");
-const addPhotoBtn=document.getElementById("addPhotoBtn");
+const cameraPhotoInput=document.getElementById("cameraPhotoInput");
+const libraryPhotoInput=document.getElementById("libraryPhotoInput");
+const takePhotoBtn=document.getElementById("takePhotoBtn");
+const choosePhotoBtn=document.getElementById("choosePhotoBtn");
 
-addPhotoBtn.addEventListener("click",()=>{
+takePhotoBtn.addEventListener("click",()=>{
   if(currentPhotos.length>=5) return;
-  photoInput.value="";
-  photoInput.click();
+  cameraPhotoInput.value="";
+  cameraPhotoInput.click();
 });
 
-photoInput.addEventListener("change",async()=>{
-  const file=photoInput.files?.[0];
-  if(!file || currentPhotos.length>=5) return;
+choosePhotoBtn.addEventListener("click",()=>{
+  if(currentPhotos.length>=5) return;
+  libraryPhotoInput.value="";
+  libraryPhotoInput.click();
+});
+
+async function addPhotoFiles(files,sourceButton){
+  const remaining=5-currentPhotos.length;
+  const selected=[...files].slice(0,remaining);
+  if(!selected.length) return;
+
+  takePhotoBtn.disabled=true;
+  choosePhotoBtn.disabled=true;
+  sourceButton.textContent=selected.length>1 ? "Traitement des photos…" : "Traitement de la photo…";
 
   try{
-    addPhotoBtn.disabled=true;
-    addPhotoBtn.textContent="Traitement de la photo…";
-    const compressed=await compressPhoto(file);
-    currentPhotos.push(compressed);
+    for(const file of selected){
+      if(!file.type.startsWith("image/")) continue;
+      const compressed=await compressPhoto(file);
+      currentPhotos.push(compressed);
+    }
     renderPhotoPreviews();
   }catch(error){
-    alert("La photo n’a pas pu être traitée.");
+    alert("Une photo n’a pas pu être traitée.");
     renderPhotoPreviews();
   }
+}
+
+cameraPhotoInput.addEventListener("change",async()=>{
+  if(cameraPhotoInput.files?.length) await addPhotoFiles(cameraPhotoInput.files,takePhotoBtn);
 });
 
+libraryPhotoInput.addEventListener("change",async()=>{
+  if(libraryPhotoInput.files?.length) await addPhotoFiles(libraryPhotoInput.files,choosePhotoBtn);
+});
 
 function setAddressStatus(message){
   document.getElementById("addressStatus").textContent=message || "";
@@ -3039,9 +3168,8 @@ document.getElementById("navigateBtn").addEventListener("click",()=>{
 
 document.getElementById("streetViewBtn").addEventListener("click",()=>{
   const data=selectedParkingCoordinates(); if(!data) return;
-  openExternalMap(
-    `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${data.lat},${data.lng}`
-  );
+  const url=`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${encodeURIComponent(data.lat)},${encodeURIComponent(data.lng)}`;
+  openExternalMap(url);
 });
 
 document.getElementById("satelliteBtn").addEventListener("click",()=>{
