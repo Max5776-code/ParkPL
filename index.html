@@ -1445,7 +1445,7 @@ header::after{
     <div class="brand-bubble" aria-hidden="true">🚛</div>
     <div class="brand-copy">
       <h1>ParkPL</h1>
-      <p>Le carnet de route des parkings poids lourds <span class="version">v0.17</span></p>
+      <p>Le carnet de route des parkings poids lourds <span class="version">v0.17.1</span></p>
     </div>
   </div>
 </header>
@@ -3206,7 +3206,7 @@ if("serviceWorker" in navigator){
 
 
 document.getElementById("exportBackupBtn").addEventListener("click",()=>{
-  const payload={app:"ParkPL",version:"0.15.1",exportedAt:new Date().toISOString(),parkings};
+  const payload={app:"ParkPL",version:"0.17.1",exportedAt:new Date().toISOString(),parkings};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
   const url=URL.createObjectURL(blob);
   const a=document.createElement("a");
@@ -3222,21 +3222,75 @@ document.getElementById("importBackupBtn").addEventListener("click",()=>{
   document.getElementById("importBackupInput").click();
 });
 
+function normalizeImportedParking(p,index){
+  if(!p || typeof p!=="object" || Array.isArray(p)) throw new Error(`Parking ${index+1} invalide`);
+  const legacyPhotos=Array.isArray(p.photos) ? p.photos : (p.photo ? [p.photo] : []);
+  const copy={
+    access:"", surface:"", slope:"", lighting:"", noise:"", security:"",
+    addressSource:"manual", country:"France", departmentCode:"", departmentName:"", city:"",
+    toilets:"", shower:"", food:"", fuel:"", mobileNetwork:"", recommendation:"",
+    sportPrivacy:"", grassAvailable:"", eatOutside:"", tableAvailable:"", trashBin:"", waterPoint:"",
+    rating:0, returnAgain:"unknown", photos:[], commerces:[], restaurants:[],
+    ...p,
+    photos:legacyPhotos.slice(0,5),
+    commerces:Array.isArray(p.commerces) ? p.commerces.slice(0,15) : [],
+    restaurants:Array.isArray(p.restaurants) ? p.restaurants.slice(0,15) : []
+  };
+  copy.country=copy.country || "France";
+  if(!copy.id) copy.id=`p-${Date.now()}-${index}`;
+  if(copy.country==="France"){
+    if(!copy.departmentCode || !copy.departmentName){
+      const d=inferFrenchDepartment(copy);
+      if(!copy.departmentCode && d.code!=="?") copy.departmentCode=d.code;
+      if(!copy.departmentName && d.name!=="Département à renseigner") copy.departmentName=d.name;
+    }
+    if(!copy.city){
+      const c=inferCity(copy);
+      if(c!=="Ville à renseigner") copy.city=c;
+    }
+  }
+  return copy;
+}
+
 document.getElementById("importBackupInput").addEventListener("change",async event=>{
   const file=event.target.files?.[0];
   if(!file) return;
+  let imported;
   try{
-    const data=JSON.parse(await file.text());
-    const imported=Array.isArray(data) ? data : data.parkings;
-    if(!Array.isArray(imported)) throw new Error("Format invalide");
-    if(!confirm(`Restaurer ${imported.length} parking${imported.length>1?"s":""} ? La base actuelle sera remplacée.`)) return;
-    parkings=imported;
-    saveData();
-    selectedId=null;
-    render();
-    alert("Sauvegarde restaurée.");
+    const text=await file.text();
+    const data=JSON.parse(text);
+    imported=Array.isArray(data) ? data : data?.parkings;
+    if(!Array.isArray(imported)) throw new Error("La sauvegarde ne contient pas de liste de parkings.");
+    if(imported.length===0) throw new Error("La sauvegarde ne contient aucun parking.");
+    imported=imported.map(normalizeImportedParking);
   }catch(error){
-    alert("Impossible de restaurer ce fichier.");
+    console.error("Lecture sauvegarde ParkPL:",error);
+    alert(`Impossible de lire cette sauvegarde.\n\nDétail : ${error.message || error}`);
+    event.target.value="";
+    return;
+  }
+
+  if(!confirm(`Restaurer ${imported.length} parking${imported.length>1?"s":""} ? La base actuelle sera remplacée.`)){
+    event.target.value="";
+    return;
+  }
+
+  try{
+    const previous=localStorage.getItem("parkpl_data");
+    const serialized=JSON.stringify(imported);
+    localStorage.setItem("parkpl_data",serialized);
+    const check=localStorage.getItem("parkpl_data");
+    if(check!==serialized){
+      if(previous===null) localStorage.removeItem("parkpl_data");
+      else localStorage.setItem("parkpl_data",previous);
+      throw new Error("L’iPhone n’a pas confirmé l’écriture de la base locale.");
+    }
+    parkings=imported;
+    alert(`${imported.length} parking${imported.length>1?"s":""} restauré${imported.length>1?"s":""} avec succès. ParkPL va se recharger.`);
+    location.reload();
+  }catch(error){
+    console.error("Restauration ParkPL:",error);
+    alert(`La sauvegarde a été lue, mais son enregistrement a échoué.\n\nDétail : ${error.message || error}`);
   }finally{
     event.target.value="";
   }
