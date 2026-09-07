@@ -1527,6 +1527,60 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
 /* Rouge réservé aux erreurs / suppression / avis à éviter. */
 .danger,.recommendation.avoid,.return-badge.no{color:var(--danger)!important}
 
+
+
+/* ===== ParkPL v0.20 — accueil épuré + carte plein écran ===== */
+.parking-overview{padding:10px 12px 4px;background:transparent}
+.parking-overview details{background:var(--panel);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);overflow:hidden}
+.parking-overview summary{list-style:none;cursor:pointer;padding:13px 15px;display:flex;align-items:center;justify-content:space-between;gap:12px;font-weight:850}
+.parking-overview summary::-webkit-details-marker{display:none}
+.parking-overview-title{display:flex;align-items:center;gap:9px}
+.parking-overview-title strong{font-size:16px}
+.parking-overview-chevron{font-size:20px;transition:transform .2s ease}
+.parking-overview details[open] .parking-overview-chevron{transform:rotate(90deg)}
+.parking-breakdown{padding:0 15px 14px;border-top:1px solid var(--border)}
+.breakdown-country{padding:10px 0 4px;font-weight:850}
+.breakdown-dept{display:flex;justify-content:space-between;gap:12px;padding:6px 0;font-size:13px;color:var(--muted);border-bottom:1px dashed var(--border)}
+.breakdown-dept:last-child{border-bottom:0}
+.toolbar{grid-template-columns:minmax(0,1fr) auto!important}
+.toolbar #search{min-width:0}
+.map-stage{position:relative}
+.map-stage-head{gap:10px}
+.map-stage-actions{display:flex;align-items:center;gap:8px;margin-left:auto}
+.map-open-full{padding:9px 11px;border-radius:11px;background:var(--accent)!important;color:#1d1d1d!important;white-space:nowrap}
+.map-gps-control,.fullmap-gps-control{width:44px;height:44px;padding:0;border-radius:12px!important;background:var(--panel)!important;color:var(--text)!important;border:1px solid var(--border)!important;box-shadow:0 3px 12px rgba(0,0,0,.18);font-size:22px;display:grid;place-items:center;cursor:pointer}
+.leaflet-control .map-gps-control,.leaflet-control .fullmap-gps-control{display:grid}
+
+.full-map-modal{position:fixed;inset:0;z-index:5000;background:var(--bg);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
+.full-map-modal.hidden{display:none!important}
+.full-map-header{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--panel);border-bottom:1px solid var(--border);flex:0 0 auto}
+.full-map-header button{padding:10px 12px}
+.full-map-title{min-width:0;flex:1}
+.full-map-title strong{display:block;font-size:17px}
+.full-map-title small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+#fullMap{flex:1 1 auto;min-height:0;width:100%;background:#d9ddda}
+.full-map-footer{padding:8px 12px;background:var(--panel);border-top:1px solid var(--border);font-size:12px;color:var(--muted);text-align:center;flex:0 0 auto}
+.fullmap-popup-title{font-weight:850;font-size:14px;margin-bottom:3px}
+.fullmap-popup-meta{font-size:12px;color:#666;margin-bottom:8px}
+.fullmap-popup-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px;min-width:210px}
+.fullmap-popup-actions button{padding:8px 7px;border-radius:9px;background:#ececec;color:#111;font-size:12px;font-weight:750}
+.fullmap-popup-actions .popup-primary{grid-column:1/-1;background:#252525;color:#fff}
+body.full-map-open{overflow:hidden;touch-action:none}
+
+/* Le vieux champ commerces reste dans les données, jamais dans l'interface. */
+#shops{display:none!important}
+
+@media(max-width:500px){
+  .parking-overview{padding-left:10px;padding-right:10px}
+  .toolbar{grid-template-columns:1fr!important}
+  .toolbar select{grid-column:auto!important}
+  .map-stage-head{align-items:center}
+  .map-stage-head .eyebrow{font-size:10px}
+  .map-stage-head strong{font-size:15px}
+  .map-open-full{padding:9px 10px;font-size:13px}
+  .map-mascot{display:none}
+}
+
 </style>
 </head>
 <body>
@@ -1535,23 +1589,25 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
     <div class="brand-bubble" aria-hidden="true">🚛</div>
     <div class="brand-copy">
       <h1>ParkPL</h1>
-      <p>Le carnet de route des parkings poids lourds <span class="version">v0.19</span></p>
+      <p>Le carnet de route des parkings poids lourds <span class="version">v0.20</span></p>
     </div>
-    <button id="themeToggle" class="theme-toggle" type="button" aria-label="Passer en mode clair" title="Changer de thème">☀️</button>
+    <button id="themeToggle" class="theme-toggle" type="button" aria-label="Passer en mode clair" title="Changer de thème">🌙</button>
   </div>
 </header>
 
-<section class="stats-strip" aria-label="Résumé de ParkPL">
-  <div class="stat-bubble"><span id="statParkings" class="stat-number">0</span><span class="stat-label">parkings</span></div>
-  <div class="stat-bubble"><span id="statPhotos" class="stat-number">0</span><span class="stat-label">photos</span></div>
-  <div class="stat-bubble"><span id="statCommerces" class="stat-number">0</span><span class="stat-label">commerces</span></div>
-  <div class="stat-bubble"><span id="statRestaurants" class="stat-number">0</span><span class="stat-label">où manger</span></div>
+<section class="parking-overview" aria-label="Résumé de mes parkings">
+  <details id="parkingOverviewDetails">
+    <summary>
+      <span class="parking-overview-title"><span aria-hidden="true">🚛</span><strong id="parkingTotalText">0 parking enregistré</strong></span>
+      <span class="parking-overview-chevron" aria-hidden="true">›</span>
+    </summary>
+    <div id="parkingBreakdown" class="parking-breakdown"></div>
+  </details>
 </section>
 
 <section class="toolbar">
-  <input id="search" placeholder="Ville, adresse, commerce, restaurant…">
-  <button id="locateBtn" class="secondary" type="button">◎ Ma position</button>
-  <select id="filter">
+  <input id="search" placeholder="Rechercher une ville…" aria-label="Rechercher une ville">
+  <select id="filter" aria-label="Filtrer les parkings">
     <option value="all">Tous les parkings</option>
     <option value="night">Nuit autorisée</option>
     <option value="easy">Manœuvre facile</option>
@@ -1570,7 +1626,10 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
       <span class="eyebrow">CARTE DE ROUTE</span>
       <strong>Où poser le camion ?</strong>
     </div>
-    <span class="map-mascot" aria-hidden="true">🛣️</span>
+    <div class="map-stage-actions">
+      <button id="openFullMapBtn" class="map-open-full" type="button">🗺️ Plein écran</button>
+      <span class="map-mascot" aria-hidden="true">🛣️</span>
+    </div>
   </div>
   <div id="map"></div>
   <div class="map-legend">
@@ -1579,6 +1638,19 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
     <span><i class="dot avoid"></i> À éviter</span>
     <span><i class="dot unknown"></i> Non noté</span>
   </div>
+</section>
+
+
+<section id="fullMapModal" class="full-map-modal hidden" aria-label="Carte plein écran des parkings">
+  <div class="full-map-header">
+    <button id="closeFullMapBtn" class="secondary" type="button">← Retour</button>
+    <div class="full-map-title">
+      <strong>Mes parkings autour de moi</strong>
+      <small id="fullMapStatus">Touchez une épingle pour ouvrir la fiche, l’itinéraire ou Street View.</small>
+    </div>
+  </div>
+  <div id="fullMap"></div>
+  <div class="full-map-footer">Position GPS en temps réel lorsque l’autorisation de localisation est accordée.</div>
 </section>
 
 <main class="content">
@@ -1623,14 +1695,6 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
           </span>
         </button>
 
-        <button id="streetViewBtn" class="map-action street-action" type="button">
-          <span class="map-action-icon">📷</span>
-          <span class="map-action-copy">
-            <strong>Google Street View</strong>
-            <small>Voir l’entrée, les accès et les abords</small>
-          </span>
-        </button>
-
         <button id="satelliteBtn" class="map-action satellite-action" type="button">
           <span class="map-action-icon">🛰️</span>
           <span class="map-action-copy">
@@ -1649,7 +1713,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
       </div>
 
       <p class="arrival-note">
-        La vue satellite s’affiche directement dans ParkPL. Street View et Google Maps s’ouvrent dans Google Maps.
+        La vue satellite s’affiche directement dans ParkPL. Street View est disponible depuis la carte plein écran.
       </p>
     </section>
 
@@ -1787,10 +1851,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
             <option>Pas de réseau</option>
           </select>
         </div>
-        <div class="field full">
-          <label for="shops">Ancienne note générale sur les commerces</label>
-          <input id="shops" placeholder="Texte libre conservé pour compatibilité avec les anciennes fiches">
-        </div>
+        <input id="shops" type="hidden">
       </div>
     </div>
 
@@ -2022,15 +2083,32 @@ function filteredParkings(){
     return matchQ && matchF;
   });
 }
-function updateStats(){
-  const parkingCount=parkings.length;
-  const photoCount=parkings.reduce((sum,p)=>sum+(Array.isArray(p.photos)?p.photos.length:0),0);
-  const commerceCount=parkings.reduce((sum,p)=>sum+(Array.isArray(p.commerces)?p.commerces.length:0),0);
-  const restaurantCount=parkings.reduce((sum,p)=>sum+(Array.isArray(p.restaurants)?p.restaurants.length:0),0);
-  document.getElementById("statParkings").textContent=parkingCount;
-  document.getElementById("statPhotos").textContent=photoCount;
-  document.getElementById("statCommerces").textContent=commerceCount;
-  document.getElementById("statRestaurants").textContent=restaurantCount;
+function updateParkingOverview(){
+  const total=parkings.length;
+  const totalText=document.getElementById("parkingTotalText");
+  const breakdown=document.getElementById("parkingBreakdown");
+  if(totalText) totalText.textContent=`${total} parking${total>1?"s":""} enregistré${total>1?"s":""}`;
+  if(!breakdown) return;
+  if(!total){breakdown.innerHTML='<div class="meta" style="padding-top:12px">Aucun parking enregistré.</div>';return;}
+  const countries=new Map();
+  parkings.forEach(p=>{
+    const c=geoCountry(p);
+    if(!countries.has(c[0])) countries.set(c[0],{c,ps:[]});
+    countries.get(c[0]).ps.push(p);
+  });
+  let html='';
+  ["FR","BE","LU","DE"].forEach(code=>{
+    const o=countries.get(code); if(!o) return;
+    html+=`<div class="breakdown-country">${o.c[1]} ${escapeHtml(o.c[2])} — ${o.ps.length}</div>`;
+    if(code==="FR"){
+      const deps=new Map();
+      o.ps.forEach(p=>{const d=geoDept(p),key=d.join('|');if(!deps.has(key))deps.set(key,{d,count:0});deps.get(key).count++;});
+      [...deps.values()].sort((a,b)=>a.d[0].localeCompare(b.d[0],'fr',{numeric:true})).forEach(x=>{
+        html+=`<div class="breakdown-dept"><span>${escapeHtml(x.d[0])} — ${escapeHtml(x.d[1])}</span><strong>${x.count}</strong></div>`;
+      });
+    }
+  });
+  breakdown.innerHTML=html;
 }
 
 function parkingIcon(p){
@@ -2054,8 +2132,9 @@ function treeGroup(label,sub,level){const g=document.createElement("div");g.clas
 function explorerParking(p){const b=document.createElement("button");b.type="button";b.className="tree-parking";let meta=[];if(p.spaces)meta.push(`${p.spaces} places`);if(Number(p.rating)>0)meta.push(`${"★".repeat(Math.min(5,Number(p.rating)))}${"☆".repeat(Math.max(0,5-Number(p.rating)))}`);b.innerHTML=`<span class="tree-parking-icon">🚛</span><span class="tree-parking-copy"><span class="tree-parking-title">${escapeHtml(geoCity(p))} — ${escapeHtml(p.name||"Parking sans nom")}</span><span class="tree-parking-meta">${escapeHtml(meta.join(" · "))}</span></span>`;b.onclick=()=>{selectParking(p.id);document.getElementById("parkingExplorer").classList.add("hidden");document.getElementById("toggleExplorerBtn").textContent="🗂 Ouvrir mes parkings";document.getElementById("selectedCard")?.scrollIntoView({behavior:"smooth"})};return b}
 function renderExplorer(){const root=document.getElementById("explorerTree");if(!root)return;root.innerHTML="";const q=(document.getElementById("explorerSearch")?.value||"").toLowerCase();const src=parkings.filter(p=>!q||[p.name,p.address,p.shops,p.comment,geoCity(p),...geoDept(p),geoCountry(p)[2]].join(" ").toLowerCase().includes(q));if(!src.length){root.innerHTML='<div class="explorer-empty">Aucun parking trouvé.</div>';return}const cs=new Map();src.forEach(p=>{const c=geoCountry(p);if(!cs.has(c[0]))cs.set(c[0],{c,ps:[]});cs.get(c[0]).ps.push(p)});["FR","BE","LU","DE"].forEach(code=>{const o=cs.get(code);if(!o)return;const [cg,cb]=treeGroup(`${o.c[1]} ${o.c[2]}`,`${o.ps.length} parking${o.ps.length>1?"s":""}`,"country");if(q)cg.classList.add("open");if(code==="FR"){const ds=new Map();o.ps.forEach(p=>{const d=geoDept(p),k=d.join("|");if(!ds.has(k))ds.set(k,{d,ps:[]});ds.get(k).ps.push(p)});[...ds.values()].sort((a,b)=>a.d[0].localeCompare(b.d[0],"fr",{numeric:true})).forEach(o=>{const[dg,db]=treeGroup(`${o.d[0]} — ${o.d[1]}`,`${o.ps.length} parking${o.ps.length>1?"s":""}`,"department");if(q)dg.classList.add("open");const vs=new Map();o.ps.forEach(p=>{const v=geoCity(p);if(!vs.has(v))vs.set(v,[]);vs.get(v).push(p)});[...vs].sort((a,b)=>a[0].localeCompare(b[0],"fr")).forEach(([v,ps])=>{const[vg,vb]=treeGroup(v,`${ps.length} parking${ps.length>1?"s":""}`,"city");if(q)vg.classList.add("open");ps.forEach(p=>vb.appendChild(explorerParking(p)));db.appendChild(vg)});cb.appendChild(dg)})}else{o.ps.forEach(p=>cb.appendChild(explorerParking(p)))}root.appendChild(cg)})}
 function render(){
+  updateParkingOverview();
   markers.forEach(m=>map.removeLayer(m)); markers.clear();
-  const list=document.getElementById("parkingList"); list.innerHTML="";
+  const list=document.getElementById("parkingList"); if(list) list.innerHTML="";
   const visible=filteredParkings();
 
   visible.forEach(p=>{
@@ -2072,9 +2151,9 @@ function render(){
     const returnText=p.returnAgain==="yes" ? " · J’y retournerais" : p.returnAgain==="no" ? " · Je n’y retournerais pas" : "";
     row.innerHTML=`<strong>${escapeHtml(p.name)}</strong><br><span class="meta">${escapeHtml(p.address||"Adresse non renseignée")} · ${p.places||0} places${listStars ? ` · ${listStars}` : ""}${returnText}</span>`;
     row.addEventListener("click",()=>{selectParking(p.id); map.setView([p.lat,p.lng],16); markers.get(p.id)?.openPopup();});
-    list.appendChild(row);
+    if(list) list.appendChild(row);
   });
-  if(!visible.length) list.innerHTML='<div class="empty">Aucun parking ne correspond aux filtres.</div>';
+  if(!visible.length && list) list.innerHTML='<div class="empty">Aucun parking ne correspond aux filtres.</div>';
   if(selectedId && parkings.some(p=>p.id===selectedId)){
     showCard();
   }else{
@@ -3287,11 +3366,6 @@ document.getElementById("navigateBtn").addEventListener("click",()=>{
   openExternalMap(`https://maps.apple.com/?daddr=${data.lat},${data.lng}&dirflg=d`);
 });
 
-document.getElementById("streetViewBtn").addEventListener("click",()=>{
-  const data=selectedParkingCoordinates(); if(!data) return;
-  const url=`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${encodeURIComponent(data.lat)},${encodeURIComponent(data.lng)}`;
-  openExternalMap(url);
-});
 
 document.getElementById("satelliteBtn").addEventListener("click",()=>{
   const data=selectedParkingCoordinates(); if(!data) return;
@@ -3305,20 +3379,84 @@ document.getElementById("googleMapsBtn").addEventListener("click",()=>{
     `https://www.google.com/maps/search/?api=1&query=${data.lat},${data.lng}`
   );
 });
-document.getElementById("locateBtn").addEventListener("click",()=>{
+
+
+
+let mainUserMarker=null;
+function locateOnMainMap(){
   if(!navigator.geolocation){alert("Géolocalisation non disponible.");return;}
   navigator.geolocation.getCurrentPosition(pos=>{
     const {latitude,longitude}=pos.coords;
-    map.setView([latitude,longitude],17);
-    L.circleMarker([latitude,longitude],{radius:8}).addTo(map).bindPopup("Votre position").openPopup();
-    if(!document.getElementById("formSection").classList.contains("hidden")){
-      document.getElementById("lat").value=latitude.toFixed(7);
-      document.getElementById("lng").value=longitude.toFixed(7);
-      document.getElementById("address").dataset.source="gps";
-      lookupAddressFromCoordinates(latitude,longitude);
-    }
-  },()=>alert("Autorisez la localisation dans Safari pour utiliser cette fonction."),{enableHighAccuracy:true});
+    map.setView([latitude,longitude],16);
+    if(mainUserMarker) map.removeLayer(mainUserMarker);
+    mainUserMarker=L.circleMarker([latitude,longitude],{radius:9,weight:3,fillOpacity:.9}).addTo(map).bindPopup("Votre position").openPopup();
+  },()=>alert("Autorisez la localisation pour utiliser cette fonction."),{enableHighAccuracy:true,maximumAge:10000,timeout:15000});
+}
+const MainGpsControl=L.Control.extend({
+  options:{position:"bottomright"},
+  onAdd(){const wrap=L.DomUtil.create("div","leaflet-control");const b=L.DomUtil.create("button","map-gps-control",wrap);b.type="button";b.innerHTML="◎";b.title="Ma position";b.setAttribute("aria-label","Recentrer sur ma position");L.DomEvent.disableClickPropagation(wrap);L.DomEvent.on(b,"click",e=>{L.DomEvent.stop(e);locateOnMainMap();});return wrap;}
 });
+new MainGpsControl().addTo(map);
+
+let fullMap=null,fullStreetLayer=null,fullSatelliteLayer=null,fullUserMarker=null,fullWatchId=null,fullFirstFix=true;
+function fullMapParkingPopup(p){
+  const city=escapeHtml(geoCity(p));
+  return `<div class="fullmap-popup-title">${escapeHtml(p.name||"Parking")}</div>
+    <div class="fullmap-popup-meta">${city}${p.places?` · ${p.places} places PL`:""}</div>
+    <div class="fullmap-popup-actions">
+      <button class="popup-primary" onclick="fullMapOpenParking('${String(p.id).replace(/'/g,"\\'")}')">Ouvrir la fiche</button>
+      <button onclick="fullMapNavigate('${String(p.id).replace(/'/g,"\\'")}')">Itinéraire</button>
+      <button onclick="fullMapStreetView('${String(p.id).replace(/'/g,"\\'")}')">Street View</button>
+    </div>`;
+}
+function ensureFullMap(){
+  if(fullMap) return;
+  fullMap=L.map("fullMap",{zoomControl:true}).setView(map.getCenter(),Math.max(8,Math.min(13,map.getZoom())));
+  fullStreetLayer=L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"&copy; OpenStreetMap"}).addTo(fullMap);
+  fullSatelliteLayer=L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",{maxZoom:19,attribution:"Tiles &copy; Esri"});
+  L.control.layers({"Carte":fullStreetLayer,"Satellite":fullSatelliteLayer},null,{position:"topright",collapsed:true}).addTo(fullMap);
+  const FullGpsControl=L.Control.extend({options:{position:"bottomright"},onAdd(){const wrap=L.DomUtil.create("div","leaflet-control");const b=L.DomUtil.create("button","fullmap-gps-control",wrap);b.type="button";b.innerHTML="◎";b.title="Ma position";L.DomEvent.disableClickPropagation(wrap);L.DomEvent.on(b,"click",e=>{L.DomEvent.stop(e);if(fullUserMarker) fullMap.setView(fullUserMarker.getLatLng(),14);else startFullMapTracking(true);});return wrap;}});
+  new FullGpsControl().addTo(fullMap);
+}
+function renderFullMapMarkers(){
+  ensureFullMap();
+  if(fullMap._parkplMarkers) fullMap._parkplMarkers.forEach(m=>fullMap.removeLayer(m));
+  fullMap._parkplMarkers=[];
+  parkings.forEach(p=>{
+    const lat=Number(p.lat),lng=Number(p.lng);if(!Number.isFinite(lat)||!Number.isFinite(lng))return;
+    const m=L.marker([lat,lng],{icon:parkingIcon(p)}).addTo(fullMap).bindPopup(fullMapParkingPopup(p),{maxWidth:260});
+    fullMap._parkplMarkers.push(m);
+  });
+}
+function updateFullUserPosition(pos,recenter=false){
+  if(!fullMap) return;
+  const {latitude,longitude,accuracy}=pos.coords;
+  if(!fullUserMarker){
+    fullUserMarker=L.circleMarker([latitude,longitude],{radius:10,weight:4,fillOpacity:1}).addTo(fullMap).bindTooltip("Vous êtes ici");
+  }else fullUserMarker.setLatLng([latitude,longitude]);
+  const status=document.getElementById("fullMapStatus");
+  if(status) status.textContent=`Position active · précision ≈ ${Math.round(accuracy||0)} m · touchez une épingle pour Street View.`;
+  if(recenter||fullFirstFix){fullMap.setView([latitude,longitude],11);fullFirstFix=false;}
+}
+function startFullMapTracking(forceCenter=false){
+  if(!navigator.geolocation){document.getElementById("fullMapStatus").textContent="Géolocalisation indisponible.";return;}
+  if(fullWatchId!==null){if(forceCenter&&fullUserMarker)fullMap.setView(fullUserMarker.getLatLng(),14);return;}
+  fullFirstFix=true;
+  fullWatchId=navigator.geolocation.watchPosition(pos=>updateFullUserPosition(pos,forceCenter),()=>{
+    const s=document.getElementById("fullMapStatus");if(s)s.textContent="Localisation refusée ou indisponible. La carte reste utilisable.";
+  },{enableHighAccuracy:true,maximumAge:5000,timeout:20000});
+}
+function stopFullMapTracking(){if(fullWatchId!==null&&navigator.geolocation){navigator.geolocation.clearWatch(fullWatchId);fullWatchId=null;}}
+function openFullMap(){
+  const modal=document.getElementById("fullMapModal");modal.classList.remove("hidden");document.body.classList.add("full-map-open");
+  ensureFullMap();renderFullMapMarkers();setTimeout(()=>{fullMap.invalidateSize();fullMap.setView(map.getCenter(),Math.max(8,Math.min(13,map.getZoom())));startFullMapTracking(false);},80);
+}
+function closeFullMap(){document.getElementById("fullMapModal").classList.add("hidden");document.body.classList.remove("full-map-open");stopFullMapTracking();}
+window.fullMapOpenParking=id=>{const p=parkings.find(x=>String(x.id)===String(id));if(!p)return;selectedId=p.id;closeFullMap();showCard();setTimeout(()=>document.getElementById("selectedCard")?.scrollIntoView({behavior:"smooth",block:"start"}),100);};
+window.fullMapNavigate=id=>{const p=parkings.find(x=>String(x.id)===String(id));if(!p)return;openExternalMap(`https://maps.apple.com/?daddr=${Number(p.lat)},${Number(p.lng)}&dirflg=d`);};
+window.fullMapStreetView=id=>{const p=parkings.find(x=>String(x.id)===String(id));if(!p)return;const lat=Number(p.lat),lng=Number(p.lng);openExternalMap(`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${encodeURIComponent(lat)},${encodeURIComponent(lng)}`);};
+document.getElementById("openFullMapBtn").addEventListener("click",openFullMap);
+document.getElementById("closeFullMapBtn").addEventListener("click",closeFullMap);
 
 if("serviceWorker" in navigator){
   navigator.serviceWorker.register("./service-worker.js").catch(()=>{});
@@ -3326,7 +3464,7 @@ if("serviceWorker" in navigator){
 
 
 document.getElementById("exportBackupBtn").addEventListener("click",()=>{
-  const payload={app:"ParkPL",version:"0.19",exportedAt:new Date().toISOString(),parkings};
+  const payload={app:"ParkPL",version:"0.20",exportedAt:new Date().toISOString(),parkings};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
   const url=URL.createObjectURL(blob);
   const a=document.createElement("a");
@@ -3422,7 +3560,7 @@ document.getElementById("explorerSearch").addEventListener("input",renderExplore
 const themeToggle=document.getElementById("themeToggle");
 function syncThemeToggle(){
   const dark=document.documentElement.dataset.theme!=="light";
-  themeToggle.textContent=dark?"☀️":"🌙";
+  themeToggle.textContent=dark?"🌙":"☀️";
   themeToggle.setAttribute("aria-label",dark?"Passer en mode clair":"Passer en mode sombre");
   themeToggle.title=dark?"Mode clair":"Mode sombre";
   const meta=document.querySelector('meta[name="theme-color"]');
