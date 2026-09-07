@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#5b45d6">
+  <meta name="theme-color" content="#232527">
   <title>ParkPL</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
@@ -1437,6 +1437,96 @@ header::after{
 .photo-library-add{background:#eeeaff!important;color:#5140b5!important;border:1px solid #dcd4fb!important;border-radius:16px!important;font-weight:850!important}
 .photo-library-add:disabled,.photo-add:disabled{opacity:.55;cursor:not-allowed}
 @media(max-width:390px){.photo-source-actions{grid-template-columns:1fr}}
+
+
+/* ===== ParkPL v0.19 — thèmes chromatiques Jour / Nuit ===== */
+:root,
+html[data-theme="dark"]{
+  --bg:#181a1b;
+  --panel:#232527;
+  --panel-soft:#292b2d;
+  --text:#f2f0e9;
+  --muted:#aaa9a3;
+  --accent:#e2b84b;
+  --accent2:#e2b84b;
+  --accent3:#e2b84b;
+  --sun:#e2b84b;
+  --border:#3a3d3f;
+  --danger:#c85b62;
+  --shadow:0 14px 34px rgba(0,0,0,.28);
+  --shadow-soft:0 7px 18px rgba(0,0,0,.20);
+  --field:#202224;
+  --soft:#2c2e30;
+  --accent-soft:#3a3423;
+  --accent-text:#f0c75e;
+}
+html[data-theme="light"]{
+  --bg:#fff9f4;
+  --panel:#ffffff;
+  --panel-soft:#fff4ea;
+  --text:#302923;
+  --muted:#756b63;
+  --accent:#d98245;
+  --accent2:#d98245;
+  --accent3:#d98245;
+  --sun:#d98245;
+  --border:#eedfd2;
+  --danger:#b64a4f;
+  --shadow:0 14px 34px rgba(114,78,48,.11);
+  --shadow-soft:0 7px 18px rgba(114,78,48,.08);
+  --field:#ffffff;
+  --soft:#fff4ea;
+  --accent-soft:#ffead8;
+  --accent-text:#a85f2e;
+}
+html,body{background:var(--bg)!important;color:var(--text)!important}
+body{background:var(--bg)!important}
+body::before,body::after{display:none!important}
+header{
+  background:var(--panel)!important;
+  color:var(--text)!important;
+  border-bottom:1px solid var(--border)!important;
+  box-shadow:var(--shadow-soft)!important;
+}
+html[data-theme="dark"] header{background:#202224!important}
+html[data-theme="light"] header{background:#fff!important}
+.brand-row{width:100%!important}
+.brand-copy{flex:1;min-width:0}
+.brand-bubble{background:var(--accent)!important;color:#242424!important;box-shadow:none!important}
+.version{background:var(--accent-soft)!important;color:var(--accent-text)!important}
+.theme-toggle{
+  flex:0 0 auto;width:43px;height:43px;padding:0!important;border:1px solid var(--border)!important;
+  border-radius:14px!important;background:var(--soft)!important;color:var(--text)!important;
+  box-shadow:none!important;font-size:19px!important;line-height:1!important;
+}
+.stats-strip,.toolbar,.gps-panel,.content{background:transparent!important}
+.stat-bubble,.card,.parking-row,.commerce-card,.commerce-editor,.photo-box{
+  background:var(--panel)!important;border-color:var(--border)!important;box-shadow:var(--shadow-soft)!important;
+}
+.stat-number,.form-group h4,.detail-label{color:var(--accent)!important}
+input,select,textarea{background:var(--field)!important;color:var(--text)!important;border-color:var(--border)!important}
+input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 16%,transparent)!important}
+.primary,.gps-create,.photo-add{
+  background:var(--accent)!important;color:#252525!important;box-shadow:none!important;
+}
+.secondary,.commerce-add,.address-lookup,.photo-library-add{
+  background:var(--accent-soft)!important;color:var(--accent-text)!important;border-color:var(--border)!important;
+}
+.chip,.empty,.detail-box,.commerce-info,.form-group{
+  background:var(--soft)!important;color:var(--text)!important;border-color:var(--border)!important;
+}
+#selectedCard,#listSection,#formSection{border-top-color:var(--accent)!important}
+#map{border-color:var(--panel)!important;box-shadow:var(--shadow)!important}
+.leaflet-control-zoom a{color:var(--accent-text)!important}
+.bottom{background:color-mix(in srgb,var(--panel) 96%,transparent)!important;border-color:var(--border)!important}
+/* Les états fonctionnels restent lisibles, mais sont volontairement atténués. */
+.recommendation.good,.recommendation.average,.recommendation.unknown,.return-badge.yes,.return-badge.unknown{
+  background:var(--accent-soft)!important;color:var(--accent-text)!important;
+}
+.truck-marker.good,.truck-marker.average,.truck-marker.unknown{background:var(--accent)!important}
+/* Rouge réservé aux erreurs / suppression / avis à éviter. */
+.danger,.recommendation.avoid,.return-badge.no{color:var(--danger)!important}
+
 </style>
 </head>
 <body>
@@ -1445,8 +1535,9 @@ header::after{
     <div class="brand-bubble" aria-hidden="true">🚛</div>
     <div class="brand-copy">
       <h1>ParkPL</h1>
-      <p>Le carnet de route des parkings poids lourds <span class="version">v0.17.1</span></p>
+      <p>Le carnet de route des parkings poids lourds <span class="version">v0.19</span></p>
     </div>
+    <button id="themeToggle" class="theme-toggle" type="button" aria-label="Passer en mode clair" title="Changer de thème">☀️</button>
   </div>
 </header>
 
@@ -1544,7 +1635,7 @@ header::after{
           <span class="map-action-icon">🛰️</span>
           <span class="map-action-copy">
             <strong>Vue satellite</strong>
-            <small>Observer la taille et les accès</small>
+            <small>Afficher ici la vue aérienne</small>
           </span>
         </button>
 
@@ -1558,7 +1649,7 @@ header::after{
       </div>
 
       <p class="arrival-note">
-        Les vues s’ouvrent dans Google Maps lorsqu’elles sont disponibles à cet emplacement.
+        La vue satellite s’affiche directement dans ParkPL. Street View et Google Maps s’ouvrent dans Google Maps.
       </p>
     </section>
 
@@ -1767,6 +1858,11 @@ header::after{
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
+/* ParkPL v0.19 : thème mémorisé, sombre par défaut. */
+(function(){
+  const saved=localStorage.getItem("parkpl_theme");
+  document.documentElement.dataset.theme=(saved==="light"||saved==="dark")?saved:"dark";
+})();
 const defaultParking = {
   id: "fameck-001",
   name: "Zone commerciale de Fameck",
@@ -1875,10 +1971,14 @@ let currentRestaurants = [];
 let markers = new Map();
 
 const map = L.map("map").setView([49.302855, 6.117852], 15);
-L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-  maxZoom: 19,
-  attribution: "&copy; OpenStreetMap"
-}).addTo(map);
+const streetLayer=L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {maxZoom:19,attribution:"&copy; OpenStreetMap"}).addTo(map);
+const satelliteLayer=L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {maxZoom:19,attribution:"Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics and the GIS User Community"});
+L.control.layers({"Carte":streetLayer,"Satellite":satelliteLayer},null,{position:"topright",collapsed:false}).addTo(map);
+function showSatelliteAt(lat,lng,zoom=18){
+  if(map.hasLayer(streetLayer)) map.removeLayer(streetLayer);
+  if(!map.hasLayer(satelliteLayer)) satelliteLayer.addTo(map);
+  map.setView([lat,lng],zoom);
+}
 
 function saveData(){ localStorage.setItem("parkpl_data", JSON.stringify(parkings)); }
 function nightLabel(v){ return v==="yes" ? "Nuit autorisée" : v==="no" ? "Nuit interdite" : "Nuit à vérifier"; }
@@ -2242,18 +2342,18 @@ function escapeHtml(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;",
 let saveInProgress=false;
 let saveToastTimer=null;
 function showSaveToast(message="Parking enregistré ✓"){const toast=document.getElementById("saveToast");if(!toast)return;toast.textContent=message;toast.classList.remove("hidden");if(saveToastTimer)clearTimeout(saveToastTimer);saveToastTimer=setTimeout(()=>toast.classList.add("hidden"),2200);}
-document.getElementById("saveBtn").addEventListener("click",()=>{
+document.getElementById("saveBtn").addEventListener("click",async()=>{
   if(saveInProgress) return;
   saveInProgress=true;
   const saveButton=document.getElementById("saveBtn");
-  saveButton.disabled=true;
-  saveButton.textContent="Enregistrement…";
-  const lat=parseFloat(document.getElementById("lat").value.replace(",","."));
-  const lng=parseFloat(document.getElementById("lng").value.replace(",","."));
-  const name=document.getElementById("name").value.trim();
-  if(!name || Number.isNaN(lat) || Number.isNaN(lng)){
-    document.getElementById("formStatus").textContent="Le nom, la latitude et la longitude sont obligatoires."; saveInProgress=false; saveButton.disabled=false; saveButton.textContent="Enregistrer"; return;
-  }
+  const status=document.getElementById("formStatus");
+  saveButton.disabled=true; saveButton.textContent="Enregistrement…";
+  status.textContent="Enregistrement en cours…";
+  try{
+    const lat=parseFloat(document.getElementById("lat").value.replace(",","."));
+    const lng=parseFloat(document.getElementById("lng").value.replace(",","."));
+    const name=document.getElementById("name").value.trim();
+    if(!name || Number.isNaN(lat) || Number.isNaN(lng)) throw new Error("Le nom, la latitude et la longitude sont obligatoires.");
   const p={
     id: editingId || `p-${Date.now()}`,
     name,
@@ -2318,12 +2418,33 @@ document.getElementById("saveBtn").addEventListener("click",()=>{
     photos:[...currentPhotos].slice(0,5),
     comment:document.getElementById("comment").value.trim()
   };
-  const i=parkings.findIndex(x=>x.id===p.id);
-  const wasEditing=i>=0;
-  if(i>=0) parkings[i]=p; else parkings.push(p);
-  selectedId=p.id; saveData(); render(); closeForm(); map.setView([p.lat,p.lng],16);
-  showSaveToast(wasEditing ? "Parking modifié ✓" : "Parking enregistré ✓");
-  setTimeout(()=>{saveInProgress=false;saveButton.disabled=false;saveButton.textContent="Enregistrer";},500);
+    const before=parkings.slice();
+    const i=parkings.findIndex(x=>x.id===p.id);
+    const wasEditing=i>=0;
+    if(i>=0) parkings[i]=p; else parkings.push(p);
+    selectedId=p.id;
+    try{
+      saveData();
+      const check=JSON.parse(localStorage.getItem("parkpl_data")||"[]");
+      if(!Array.isArray(check)||!check.some(x=>x.id===p.id)) throw new Error("verification");
+    }catch(storageError){
+      parkings=before;
+      throw new Error("Échec du stockage sur l’iPhone. L’ancienne base a été conservée.");
+    }
+    try{render();}catch(e){console.error("ParkPL render",e);}
+    try{map.setView([p.lat,p.lng],16);}catch(e){console.error("ParkPL map",e);}
+    status.textContent=wasEditing ? "Parking modifié ✓" : "Parking enregistré ✓";
+    showSaveToast(wasEditing ? "Parking modifié ✓" : "Parking enregistré ✓");
+    if(navigator.vibrate) navigator.vibrate(40);
+    await new Promise(r=>setTimeout(r,650));
+    closeForm();
+  }catch(error){
+    console.error("ParkPL save",error);
+    status.textContent=error?.message||"Erreur pendant l’enregistrement. Réessaie sans quitter la fiche.";
+    showSaveToast("Enregistrement impossible");
+  }finally{
+    saveInProgress=false; saveButton.disabled=false; saveButton.textContent="Enregistrer";
+  }
 });
 document.getElementById("deleteBtn").addEventListener("click",()=>{
   if(!editingId) return;
@@ -3174,9 +3295,8 @@ document.getElementById("streetViewBtn").addEventListener("click",()=>{
 
 document.getElementById("satelliteBtn").addEventListener("click",()=>{
   const data=selectedParkingCoordinates(); if(!data) return;
-  openExternalMap(
-    `https://www.google.com/maps/@?api=1&map_action=map&center=${data.lat},${data.lng}&zoom=18&basemap=satellite`
-  );
+  showSatelliteAt(data.lat,data.lng,18);
+  document.getElementById("map").scrollIntoView({behavior:"smooth",block:"center"});
 });
 
 document.getElementById("googleMapsBtn").addEventListener("click",()=>{
@@ -3206,7 +3326,7 @@ if("serviceWorker" in navigator){
 
 
 document.getElementById("exportBackupBtn").addEventListener("click",()=>{
-  const payload={app:"ParkPL",version:"0.17.1",exportedAt:new Date().toISOString(),parkings};
+  const payload={app:"ParkPL",version:"0.19",exportedAt:new Date().toISOString(),parkings};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
   const url=URL.createObjectURL(blob);
   const a=document.createElement("a");
@@ -3298,6 +3418,25 @@ document.getElementById("importBackupInput").addEventListener("change",async eve
 
 document.getElementById("toggleExplorerBtn").addEventListener("click",()=>{const e=document.getElementById("parkingExplorer"),b=document.getElementById("toggleExplorerBtn"),open=e.classList.contains("hidden");e.classList.toggle("hidden");b.textContent=open?"Fermer mes parkings":"🗂 Ouvrir mes parkings";if(open)renderExplorer()});
 document.getElementById("explorerSearch").addEventListener("input",renderExplorer);
+
+const themeToggle=document.getElementById("themeToggle");
+function syncThemeToggle(){
+  const dark=document.documentElement.dataset.theme!=="light";
+  themeToggle.textContent=dark?"☀️":"🌙";
+  themeToggle.setAttribute("aria-label",dark?"Passer en mode clair":"Passer en mode sombre");
+  themeToggle.title=dark?"Mode clair":"Mode sombre";
+  const meta=document.querySelector('meta[name="theme-color"]');
+  if(meta) meta.content=dark?"#232527":"#ffffff";
+}
+themeToggle.addEventListener("click",()=>{
+  const next=document.documentElement.dataset.theme==="light"?"dark":"light";
+  document.documentElement.dataset.theme=next;
+  localStorage.setItem("parkpl_theme",next);
+  syncThemeToggle();
+  setTimeout(refreshMapLayout,80);
+});
+syncThemeToggle();
+
 render();
 
 function refreshMapLayout(){

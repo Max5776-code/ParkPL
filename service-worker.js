@@ -1,4 +1,4 @@
-const CACHE="parkpl-v0.17.1";
+const CACHE="parkpl-v0.19";
 const APP_SHELL=["./","./index.html","./manifest.webmanifest","./icon-192.svg","./icon-512.svg"];
 self.addEventListener("install",e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(APP_SHELL)));self.skipWaiting()});
 self.addEventListener("activate",e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==CACHE).map(x=>caches.delete(x)))));self.clients.claim()});
