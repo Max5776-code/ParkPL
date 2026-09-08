@@ -1466,18 +1466,18 @@ html[data-theme="light"]{
   --panel-soft:#fff4ea;
   --text:#302923;
   --muted:#756b63;
-  --accent:#d98245;
-  --accent2:#d98245;
-  --accent3:#d98245;
-  --sun:#d98245;
-  --border:#eedfd2;
+  --accent:#f3ad78;
+  --accent2:#f3ad78;
+  --accent3:#f3ad78;
+  --sun:#f3ad78;
+  --border:#f0dfd2;
   --danger:#b64a4f;
   --shadow:0 14px 34px rgba(114,78,48,.11);
   --shadow-soft:0 7px 18px rgba(114,78,48,.08);
   --field:#ffffff;
-  --soft:#fff4ea;
-  --accent-soft:#ffead8;
-  --accent-text:#a85f2e;
+  --soft:#fff2e8;
+  --accent-soft:#ffeadc;
+  --accent-text:#9a552c;
 }
 html,body{background:var(--bg)!important;color:var(--text)!important}
 body{background:var(--bg)!important}
@@ -1567,6 +1567,65 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
 .fullmap-popup-actions .popup-primary{grid-column:1/-1;background:#252525;color:#fff}
 body.full-map-open{overflow:hidden;touch-action:none}
 
+
+/* ===== ParkPL v0.21 — carte plein écran réellement épurée ===== */
+.full-map-modal{padding:0!important;background:#d9ddda!important}
+#fullMap{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;min-height:100%!important}
+.full-map-header,.full-map-footer{display:none!important}
+.full-map-back{
+  position:absolute;z-index:5600;top:calc(env(safe-area-inset-top) + 10px);left:12px;
+  width:46px;height:46px;padding:0!important;border-radius:50%!important;
+  display:grid;place-items:center;background:var(--panel)!important;color:var(--text)!important;
+  border:1px solid var(--border)!important;box-shadow:0 4px 16px rgba(0,0,0,.20)!important;
+  font-size:22px!important;font-weight:900!important;
+}
+.full-map-gps-state{
+  position:absolute;z-index:5550;left:50%;top:calc(env(safe-area-inset-top) + 13px);transform:translateX(-50%);
+  padding:6px 10px;border-radius:999px;background:color-mix(in srgb,var(--panel) 90%,transparent);
+  color:var(--muted);border:1px solid var(--border);box-shadow:0 3px 12px rgba(0,0,0,.12);
+  font-size:11px;font-weight:800;white-space:nowrap;pointer-events:none;
+}
+.full-map-gps-state.active{color:#237a55}
+.full-map-gps-state.offline{color:var(--danger)}
+.full-pin-wrap{background:transparent!important;border:none!important}
+.full-pin{
+  position:relative;width:16px;height:22px;background:#d93636;border:2px solid #fff;
+  border-radius:10px 10px 10px 0;transform:rotate(-45deg);
+  box-shadow:0 2px 5px rgba(0,0,0,.32);
+}
+.full-pin::after{
+  content:"";position:absolute;width:5px;height:5px;border-radius:50%;background:#fff;
+  left:50%;top:50%;transform:translate(-50%,-50%);
+}
+/* Contrôles plein écran : gros doigts, formes rondes, pas de gros panneaux blancs. */
+.fullmap-control-stack{display:flex!important;flex-direction:column;gap:9px!important;margin-top:72px!important}
+.fullmap-round-btn{
+  width:46px!important;height:46px!important;padding:0!important;border-radius:50%!important;
+  display:grid!important;place-items:center!important;background:var(--panel)!important;color:var(--text)!important;
+  border:1px solid var(--border)!important;box-shadow:0 4px 14px rgba(0,0,0,.18)!important;
+  font-size:22px!important;font-weight:900!important;line-height:1!important;cursor:pointer!important;
+}
+.fullmap-layers-wrap{position:relative;display:flex;align-items:flex-start;gap:7px}
+.fullmap-layer-panel{
+  display:none;align-items:center;gap:7px;padding:4px;border-radius:999px;
+  background:color-mix(in srgb,var(--panel) 94%,transparent);border:1px solid var(--border);
+  box-shadow:0 4px 14px rgba(0,0,0,.16)
+}
+.fullmap-layers-wrap.open .fullmap-layer-panel{display:flex}
+.fullmap-layer-option{
+  width:38px!important;height:38px!important;padding:0!important;border-radius:50%!important;
+  display:grid!important;place-items:center!important;background:var(--panel)!important;color:var(--text)!important;
+  border:1px solid var(--border)!important;font-size:18px!important;cursor:pointer!important;
+}
+.fullmap-layer-option.active{outline:2px solid var(--accent);outline-offset:1px}
+.fullmap-gps-control,.fullmap-street-control{
+  width:48px!important;height:48px!important;border-radius:50%!important;background:var(--panel)!important;
+  color:var(--text)!important;border:1px solid var(--border)!important;box-shadow:0 4px 14px rgba(0,0,0,.18)!important;
+  font-size:21px!important;font-weight:900!important;
+}
+.fullmap-street-control{font-size:13px!important;letter-spacing:-.3px}
+.leaflet-control-attribution{font-size:8px!important;opacity:.72}
+
 /* Le vieux champ commerces reste dans les données, jamais dans l'interface. */
 #shops{display:none!important}
 
@@ -1589,7 +1648,7 @@ body.full-map-open{overflow:hidden;touch-action:none}
     <div class="brand-bubble" aria-hidden="true">🚛</div>
     <div class="brand-copy">
       <h1>ParkPL</h1>
-      <p>Le carnet de route des parkings poids lourds <span class="version">v0.20</span></p>
+      <p>Le carnet de route des parkings poids lourds <span class="version">v0.21</span></p>
     </div>
     <button id="themeToggle" class="theme-toggle" type="button" aria-label="Passer en mode clair" title="Changer de thème">🌙</button>
   </div>
@@ -1642,15 +1701,9 @@ body.full-map-open{overflow:hidden;touch-action:none}
 
 
 <section id="fullMapModal" class="full-map-modal hidden" aria-label="Carte plein écran des parkings">
-  <div class="full-map-header">
-    <button id="closeFullMapBtn" class="secondary" type="button">← Retour</button>
-    <div class="full-map-title">
-      <strong>Mes parkings autour de moi</strong>
-      <small id="fullMapStatus">Touchez une épingle pour ouvrir la fiche, l’itinéraire ou Street View.</small>
-    </div>
-  </div>
   <div id="fullMap"></div>
-  <div class="full-map-footer">Position GPS en temps réel lorsque l’autorisation de localisation est accordée.</div>
+  <button id="closeFullMapBtn" class="full-map-back" type="button" aria-label="Retour" title="Retour">←</button>
+  <div id="fullMapStatus" class="full-map-gps-state">GPS…</div>
 </section>
 
 <main class="content">
@@ -3399,24 +3452,46 @@ const MainGpsControl=L.Control.extend({
 new MainGpsControl().addTo(map);
 
 let fullMap=null,fullStreetLayer=null,fullSatelliteLayer=null,fullUserMarker=null,fullWatchId=null,fullFirstFix=true;
-function fullMapParkingPopup(p){
-  const city=escapeHtml(geoCity(p));
-  return `<div class="fullmap-popup-title">${escapeHtml(p.name||"Parking")}</div>
-    <div class="fullmap-popup-meta">${city}${p.places?` · ${p.places} places PL`:""}</div>
-    <div class="fullmap-popup-actions">
-      <button class="popup-primary" onclick="fullMapOpenParking('${String(p.id).replace(/'/g,"\\'")}')">Ouvrir la fiche</button>
-      <button onclick="fullMapNavigate('${String(p.id).replace(/'/g,"\\'")}')">Itinéraire</button>
-      <button onclick="fullMapStreetView('${String(p.id).replace(/'/g,"\\'")}')">Street View</button>
-    </div>`;
+function fullMapPinIcon(){
+  return L.divIcon({className:"full-pin-wrap",html:'<div class="full-pin"></div>',iconSize:[18,24],iconAnchor:[9,23]});
+}
+function setFullGpsState(text,state=""){
+  const el=document.getElementById("fullMapStatus");if(!el)return;
+  el.textContent=text;el.className=`full-map-gps-state ${state}`.trim();
+}
+function openStreetViewAt(lat,lng){
+  if(!Number.isFinite(lat)||!Number.isFinite(lng))return;
+  openExternalMap(`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${encodeURIComponent(lat)},${encodeURIComponent(lng)}&heading=0&pitch=0&fov=90`);
 }
 function ensureFullMap(){
   if(fullMap) return;
-  fullMap=L.map("fullMap",{zoomControl:true}).setView(map.getCenter(),Math.max(8,Math.min(13,map.getZoom())));
+  fullMap=L.map("fullMap",{zoomControl:false,attributionControl:true}).setView(map.getCenter(),Math.max(8,Math.min(13,map.getZoom())));
   fullStreetLayer=L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"&copy; OpenStreetMap"}).addTo(fullMap);
-  fullSatelliteLayer=L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",{maxZoom:19,attribution:"Tiles &copy; Esri"});
-  L.control.layers({"Carte":fullStreetLayer,"Satellite":fullSatelliteLayer},null,{position:"topright",collapsed:true}).addTo(fullMap);
-  const FullGpsControl=L.Control.extend({options:{position:"bottomright"},onAdd(){const wrap=L.DomUtil.create("div","leaflet-control");const b=L.DomUtil.create("button","fullmap-gps-control",wrap);b.type="button";b.innerHTML="◎";b.title="Ma position";L.DomEvent.disableClickPropagation(wrap);L.DomEvent.on(b,"click",e=>{L.DomEvent.stop(e);if(fullUserMarker) fullMap.setView(fullUserMarker.getLatLng(),14);else startFullMapTracking(true);});return wrap;}});
-  new FullGpsControl().addTo(fullMap);
+  fullSatelliteLayer=L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",{maxZoom:19,attribution:"&copy; Esri"});
+
+  const ZoomControl=L.Control.extend({options:{position:"topleft"},onAdd(){
+    const wrap=L.DomUtil.create("div","leaflet-control fullmap-control-stack");
+    const plus=L.DomUtil.create("button","fullmap-round-btn",wrap);plus.type="button";plus.textContent="+";plus.title="Zoomer";
+    const minus=L.DomUtil.create("button","fullmap-round-btn",wrap);minus.type="button";minus.textContent="−";minus.title="Dézoomer";
+    L.DomEvent.disableClickPropagation(wrap);L.DomEvent.on(plus,"click",e=>{L.DomEvent.stop(e);fullMap.zoomIn();});L.DomEvent.on(minus,"click",e=>{L.DomEvent.stop(e);fullMap.zoomOut();});return wrap;
+  }});new ZoomControl().addTo(fullMap);
+
+  const LayerControl=L.Control.extend({options:{position:"topright"},onAdd(){
+    const wrap=L.DomUtil.create("div","leaflet-control fullmap-layers-wrap");
+    const main=L.DomUtil.create("button","fullmap-round-btn",wrap);main.type="button";main.innerHTML="◫";main.title="Carte ou satellite";
+    const panel=L.DomUtil.create("div","fullmap-layer-panel",wrap);
+    const street=L.DomUtil.create("button","fullmap-layer-option active",panel);street.type="button";street.innerHTML="🗺️";street.title="Carte";
+    const sat=L.DomUtil.create("button","fullmap-layer-option",panel);sat.type="button";sat.innerHTML="🛰️";sat.title="Satellite";
+    L.DomEvent.disableClickPropagation(wrap);
+    L.DomEvent.on(main,"click",e=>{L.DomEvent.stop(e);wrap.classList.toggle("open");});
+    L.DomEvent.on(street,"click",e=>{L.DomEvent.stop(e);if(fullMap.hasLayer(fullSatelliteLayer))fullMap.removeLayer(fullSatelliteLayer);if(!fullMap.hasLayer(fullStreetLayer))fullStreetLayer.addTo(fullMap);street.classList.add("active");sat.classList.remove("active");wrap.classList.remove("open");});
+    L.DomEvent.on(sat,"click",e=>{L.DomEvent.stop(e);if(fullMap.hasLayer(fullStreetLayer))fullMap.removeLayer(fullStreetLayer);if(!fullMap.hasLayer(fullSatelliteLayer))fullSatelliteLayer.addTo(fullMap);sat.classList.add("active");street.classList.remove("active");wrap.classList.remove("open");});
+    return wrap;
+  }});new LayerControl().addTo(fullMap);
+
+  const FullGpsControl=L.Control.extend({options:{position:"bottomright"},onAdd(){const wrap=L.DomUtil.create("div","leaflet-control");const b=L.DomUtil.create("button","fullmap-gps-control",wrap);b.type="button";b.innerHTML="◎";b.title="Ma position";L.DomEvent.disableClickPropagation(wrap);L.DomEvent.on(b,"click",e=>{L.DomEvent.stop(e);if(fullUserMarker)fullMap.setView(fullUserMarker.getLatLng(),15);else startFullMapTracking(true);});return wrap;}});new FullGpsControl().addTo(fullMap);
+
+  const StreetControl=L.Control.extend({options:{position:"bottomleft"},onAdd(){const wrap=L.DomUtil.create("div","leaflet-control");const b=L.DomUtil.create("button","fullmap-street-control",wrap);b.type="button";b.textContent="SV";b.title="Street View au centre de la carte";L.DomEvent.disableClickPropagation(wrap);L.DomEvent.on(b,"click",e=>{L.DomEvent.stop(e);const c=fullMap.getCenter();openStreetViewAt(c.lat,c.lng);});return wrap;}});new StreetControl().addTo(fullMap);
 }
 function renderFullMapMarkers(){
   ensureFullMap();
@@ -3424,27 +3499,25 @@ function renderFullMapMarkers(){
   fullMap._parkplMarkers=[];
   parkings.forEach(p=>{
     const lat=Number(p.lat),lng=Number(p.lng);if(!Number.isFinite(lat)||!Number.isFinite(lng))return;
-    const m=L.marker([lat,lng],{icon:parkingIcon(p)}).addTo(fullMap).bindPopup(fullMapParkingPopup(p),{maxWidth:260});
+    const m=L.marker([lat,lng],{icon:fullMapPinIcon(),title:p.name||"Parking"}).addTo(fullMap);
+    m.on("click",()=>fullMapOpenParking(p.id));
     fullMap._parkplMarkers.push(m);
   });
 }
 function updateFullUserPosition(pos,recenter=false){
   if(!fullMap) return;
-  const {latitude,longitude,accuracy}=pos.coords;
+  const {latitude,longitude}=pos.coords;
   if(!fullUserMarker){
-    fullUserMarker=L.circleMarker([latitude,longitude],{radius:10,weight:4,fillOpacity:1}).addTo(fullMap).bindTooltip("Vous êtes ici");
+    fullUserMarker=L.circleMarker([latitude,longitude],{radius:7,weight:3,fillOpacity:1,color:"#ffffff",fillColor:"#2f80ed"}).addTo(fullMap).bindTooltip("Vous êtes ici");
   }else fullUserMarker.setLatLng([latitude,longitude]);
-  const status=document.getElementById("fullMapStatus");
-  if(status) status.textContent=`Position active · précision ≈ ${Math.round(accuracy||0)} m · touchez une épingle pour Street View.`;
+  setFullGpsState("GPS actif","active");
   if(recenter||fullFirstFix){fullMap.setView([latitude,longitude],11);fullFirstFix=false;}
 }
 function startFullMapTracking(forceCenter=false){
-  if(!navigator.geolocation){document.getElementById("fullMapStatus").textContent="Géolocalisation indisponible.";return;}
-  if(fullWatchId!==null){if(forceCenter&&fullUserMarker)fullMap.setView(fullUserMarker.getLatLng(),14);return;}
-  fullFirstFix=true;
-  fullWatchId=navigator.geolocation.watchPosition(pos=>updateFullUserPosition(pos,forceCenter),()=>{
-    const s=document.getElementById("fullMapStatus");if(s)s.textContent="Localisation refusée ou indisponible. La carte reste utilisable.";
-  },{enableHighAccuracy:true,maximumAge:5000,timeout:20000});
+  if(!navigator.geolocation){setFullGpsState("GPS indisponible","offline");return;}
+  if(fullWatchId!==null){if(forceCenter&&fullUserMarker)fullMap.setView(fullUserMarker.getLatLng(),15);return;}
+  fullFirstFix=true;setFullGpsState("GPS…","");
+  fullWatchId=navigator.geolocation.watchPosition(pos=>updateFullUserPosition(pos,forceCenter),()=>setFullGpsState("GPS indisponible","offline"),{enableHighAccuracy:true,maximumAge:5000,timeout:20000});
 }
 function stopFullMapTracking(){if(fullWatchId!==null&&navigator.geolocation){navigator.geolocation.clearWatch(fullWatchId);fullWatchId=null;}}
 function openFullMap(){
@@ -3453,8 +3526,6 @@ function openFullMap(){
 }
 function closeFullMap(){document.getElementById("fullMapModal").classList.add("hidden");document.body.classList.remove("full-map-open");stopFullMapTracking();}
 window.fullMapOpenParking=id=>{const p=parkings.find(x=>String(x.id)===String(id));if(!p)return;selectedId=p.id;closeFullMap();showCard();setTimeout(()=>document.getElementById("selectedCard")?.scrollIntoView({behavior:"smooth",block:"start"}),100);};
-window.fullMapNavigate=id=>{const p=parkings.find(x=>String(x.id)===String(id));if(!p)return;openExternalMap(`https://maps.apple.com/?daddr=${Number(p.lat)},${Number(p.lng)}&dirflg=d`);};
-window.fullMapStreetView=id=>{const p=parkings.find(x=>String(x.id)===String(id));if(!p)return;const lat=Number(p.lat),lng=Number(p.lng);openExternalMap(`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${encodeURIComponent(lat)},${encodeURIComponent(lng)}`);};
 document.getElementById("openFullMapBtn").addEventListener("click",openFullMap);
 document.getElementById("closeFullMapBtn").addEventListener("click",closeFullMap);
 
@@ -3464,7 +3535,7 @@ if("serviceWorker" in navigator){
 
 
 document.getElementById("exportBackupBtn").addEventListener("click",()=>{
-  const payload={app:"ParkPL",version:"0.20",exportedAt:new Date().toISOString(),parkings};
+  const payload={app:"ParkPL",version:"0.21",exportedAt:new Date().toISOString(),parkings};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
   const url=URL.createObjectURL(blob);
   const a=document.createElement("a");
